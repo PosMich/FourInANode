@@ -1,8 +1,42 @@
-<script src="http://localhost:8080/socket.io/socket.io.js"></script>
-<script>
-  var socket = io.connect('http://localhost:8080');
-  socket.on('news', function (data) {
-    console.log(data);
-    socket.emit('my other event', { my: 'data' });
-  });
-</script>
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" href="css/mainstyle.css"/>
+<link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,200,300,300italic,700,600&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Amatic+SC:400,700' rel='stylesheet' type='text/css'>
+<title>Home</title>
+</head>
+
+<body>
+<div id="wrapper">
+	<header>
+    	<h1> Four In A Row </h1>
+        <span class="menue_wrapper">
+        	<ul>
+            	<li class="menue"><a href="index.html">Play</a></li>
+                <li class="menue"><a href="about.html">About</a></li>
+            </ul>
+        </span>
+    </header>
+    
+    <div id="main">
+    <p>Du bist angemeldet als: <b>Schurke999</b><br/>
+    Wähle einen Spieler aus, den du in 4-Gewinnt besiegen möchtest!</p><br/><br/>
+    
+    <ul>
+        <li><a href="playground.html" class="button"><span>Play</span></a>Lisa Lederer</li>
+        <li><a href="playground.html" class="button"><span>Play</span></a>Michael 444 </li>
+        <li><a href="playground.html" class="button"><span>Play</span></a>Sebi the Warrior</li>
+        <li><a href="playground.html" class="button"><span>Play</span></a>AliTheBeast</li>
+        <li><a href="playground.html" class="button"><span>Play</span></a>TheBestGeorge666</li>
+    </ul><br/>
+    </div> <!-- Close main -->
+
+
+	<footer>
+    	<p>FH-MMTB 2011 | Slamanig Sebastian | Poschacher Michael | Lederer Lisa </p>
+    </footer>
+</div> <!-- Close wrapper -->
+</body>
+</html>
