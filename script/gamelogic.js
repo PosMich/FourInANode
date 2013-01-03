@@ -4,33 +4,35 @@
 	var theCanvas;
 	var c;
 	var context;
-	var squaresFilled = 0;
 	var replay;
 	var field_occupied;
 	var freeField;
+	
+	//Variables for Pictures
 	var arrow;
 	var arrow2;
 	var cross;
 	
-	var startX;
-	var startY;
-	var size;
-	var theCanvas2;
-	var d;
-	var number;
+	function drawCircle(theCanvas, fillColor, strokeColor, posX, posY, radius) {
+		c = document.getElementById(theCanvas);
+		context = c.getContext("2d");
+		
+		context.beginPath();
+		context.arc(posX, posY, radius, 0, 2 * Math.PI, true);
+		context.fillStyle = fillColor;
+		context.fill();
+		context.lineWidth = 2;
+		context.strokeStyle = strokeColor;
+		context.stroke();
+		context.closePath();
+	}
 	
 	//Instanciate Arrays
 	window.onload=function(){
 	    content = new Array();
 		field_occupied = new Array();
 		freeField = false;
-		
-		for(var i=1; i<7; i++){
-			for(var j=1; j<8; j++){
-				field_occupied[i + "_" + j] = false;
-				content[i + "_" + j]='';
-			}
-		} 
+		$('.player1').css('font-weight','bold');
 		
 		arrow = new Image();
 		arrow2 = new Image();
@@ -39,11 +41,41 @@
 		arrow2.src = 'img/Arrow.png';
 		cross.src = 'img/x.png';
 		
+		for(var i=1; i<7; i++){
+			for(var j=1; j<8; j++){
+				field_occupied[i + "_" + j] = false;
+				content[i + "_" + j]='';
+			}
+		} 
+		
 		for(var i=1; i<8; i++) {
 			theCanvas = "canvas"+0+"_"+i; 
 			c = document.getElementById(theCanvas);
 			context = c.getContext("2d");
 			context.drawImage(arrow, 10, 10);
+		}
+		
+		//This handles the mouse-over Effect on arrows (changing colors)
+		$('.arrow').mouseenter(function() {
+			c = document.getElementById($(this).attr('id'));
+			context = c.getContext("2d");
+			context.drawImage(arrow2, 10, 10);
+		}).mouseleave(function() {
+			c = document.getElementById($(this).attr('id'));
+			context = c.getContext("2d");
+			context.drawImage(arrow, 10, 10);
+		});
+		
+		//making Coins for player 1 and player 2
+		for(var i=1; i<3; i++) {
+			theCanvas = "player"+i;
+			
+			if(theCanvas=="player1") {
+				drawCircle(theCanvas, '#616161', '#4b4b4b', 15, 15, 10);
+			}
+			else {
+				drawCircle(theCanvas, '#ffa200', '#ea6900', 15, 15, 10);
+			}
 		}
 		
 	}
@@ -59,25 +91,18 @@
 					while(freeField==false && i>0){
 						if((field_occupied[i+"_"+colNumber])==false){
 							theCanvas = "canvas"+i+"_"+colNumber;
-							c = document.getElementById(theCanvas);
-
-							context = c.getContext("2d");
+							drawCircle(theCanvas, '#616161', '#4b4b4b', 25, 25, 20);
 							
-							context.beginPath();
-							context.arc(25, 25, 20, 0, 2 * Math.PI, true);
-							context.fillStyle = '#616161';
-							context.fill();
-							context.lineWidth = 2;
-							context.strokeStyle = '#4b4b4b';
-							context.stroke();
-							context.closePath();
+							$('.player2').css('font-weight','bold');
+							$('.player1').css('font-weight','normal');
 							
 							//To see which field is already occupied with a stone
 							field_occupied[i+"_"+colNumber]=true;
-							squaresFilled++;
-							content[i+"_"+colNumber] = 'Spieler 1';	
-							freeField=true;
+							content[i+"_"+colNumber] = 'player1';
+							
 							turn++;
+							checkWinner(i);
+							freeField=true;
 						}
 						i--;
 					}
@@ -87,32 +112,27 @@
 						c = document.getElementById(theCanvas);
 						context = c.getContext("2d");
 						context.drawImage(cross, 10, 10);
+						//Unbind Mouse-Events to obtain the "X" image
+						$("#" + theCanvas).unbind('mouseenter mouseleave');
 					}
 				}
 							 
 				else if(turn%2!=0){
 					i=6;
 					while((freeField==false) && (i>0)){
-					//for(var i=6; i>=0; i--) {
 						if((field_occupied[i+"_"+colNumber])==false){
 							theCanvas = "canvas"+i+"_"+colNumber;
-							c = document.getElementById(theCanvas);
-							context = c.getContext("2d");
+							drawCircle(theCanvas, '#ffa200', '#ea6900', 25, 25, 20);
 							
-							context.beginPath();
-							context.arc(25, 25, 20, 0, 2 * Math.PI, true);
-							context.fillStyle = '#ffa200';
-							context.fill();
-							context.lineWidth = 2;
-							context.strokeStyle = '#ea6900';
-							context.stroke();
-							context.closePath();
+							$('.player1').css('font-weight','bold');
+							$('.player2').css('font-weight','normal');
 							
-							squaresFilled++;
-							content[i+"_"+colNumber] = 'Spieler 2';
+							content[i+"_"+colNumber] = 'player2';
 							field_occupied[i+"_"+colNumber]=true;
-							freeField=true;
+							
 							turn++;
+							checkWinner(i);
+							freeField=true;
 						}
 					i--;
 					}
@@ -122,12 +142,97 @@
 						c = document.getElementById(theCanvas);
 						context = c.getContext("2d");
 						context.drawImage(cross, 10, 10);
+						$("#" + theCanvas).unbind('mouseenter mouseleave');
+					}
+				}
+				
+				function checkWinner(row){
+					var counter;
+					var getPlayer = content[i+"_"+colNumber];
+					
+					checkVertical();
+					checkHorizontal(row);
+					checkDiagonal1(row);
+					checkDiagonal2(row);
+					
+					function Winner(counter) {
+						if(counter == 4)
+						{
+							alert(getPlayer + " hat gewonnen!");
+							location.reload(true);
+						}
+					}
+					
+					function checkVertical() {
+						counter = 0;
+						for(var i=1; i<7; i++) {
+							if(content[i+"_"+colNumber] == getPlayer){
+								counter++;
+							} else {
+								counter = 0;
+							}
+							Winner(counter);
+							
+						}
+					}
+					
+					function checkHorizontal(row) {
+						counter = 0;
+						for(var i=1; i<8; i++) {
+							if(content[row+"_"+i] == getPlayer){
+								counter++;
+							} else {
+								counter = 0;
+							}
+							Winner(counter);
+							
+						}
+					}
+					
+					//check for 4 diagonal stones from bottom left to top right
+					function checkDiagonal1(row){
+						r = row;
+						col = colNumber;
+						counter = 0;
+						for(var i=0; i<6; i++) {
+							//console.log(r+"_"+col);
+							if(content[r+"_"+col] == getPlayer){
+								counter++;
+							} else {
+								counter = 0;
+							}
+							
+							Winner(counter);
+							col--;
+							r++;
+						}
+					}
+					
+					//check for 4 diagonal stones from bottom right to top left
+					function checkDiagonal2(row){
+						counter = 0;
+						r = row;
+						col = colNumber;
+
+						for(var i=0; i<6; i++) {
+							//console.log(r+"_"+col);
+							if(content[r+"_"+col] == getPlayer){
+								counter++;
+							} else {
+								counter = 0;
+							}
+							
+							Winner(counter);
+							r++;
+							col++;
+						}
 					}
 				}
 				
 		 		freeField=false;
+				
 				//Counter for filled Squares; if it is full (42), the game is over by draw
-				if(squaresFilled==42){
+				if(turn==42){
 					alert("Unentschieden!");
 					location.reload(true);
 				}
@@ -143,4 +248,7 @@
 	    else{
 	        alert("Dann eben nicht!");
 	}
-}
+	 
+	}
+	
+	

@@ -5,21 +5,8 @@
 <link rel="stylesheet" href="css/mainstyle.css"/>
 <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,200,300,300italic,700,600&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
 <link href='http://fonts.googleapis.com/css?family=Amatic+SC:400,700' rel='stylesheet' type='text/css'>
+<script src="script/jquery.js"></script>
 <script src="script/gamelogic.js"></script>
-<style>
-	.box
-	{
-		width:20px;
-		height:20px;
-		border:1px solid #000;
-		margin:1px;
-		float:left;
-	}
-	.clear
-	{
-		clear:both;
-	}
-</style>
 <title>Spielfeld</title>
 </head>
 
@@ -44,7 +31,6 @@
     
     <div class="arrows_div">
     <canvas id="canvas0_1" width="50" height="50" onclick="canvasClicked(0, 1)" class="arrow"></canvas>
-    <!-- onmouseover="changeColor(1)" onmouseout="changeColorBack(1)" -->
     <canvas id="canvas0_2" width="50" height="50" onclick="canvasClicked(0, 2)" class="arrow"></canvas>
     <canvas id="canvas0_3" width="50" height="50" onclick="canvasClicked(0, 3)" class="arrow"></canvas>
     <canvas id="canvas0_4" width="50" height="50" onclick="canvasClicked(0, 4)" class="arrow"></canvas>
@@ -105,34 +91,9 @@
     
 	</div>
 
-   
-    
-	<!-- <canvas id="playground" width="490" height="420">
-		<script type="text/javascript">
-		
-		var c_canvas = document.getElementById("playground");
-		var context = c_canvas.getContext("2d");
-		
-        for (var x = 0; x < 490; x += 70) {
-			context.moveTo(x, 0);
-			context.lineTo(x, 420);
-        }
-        
-        for (var y = 0; y < 420; y += 70) {
-			context.moveTo(0, y);
-			context.lineTo(490, y);
-        }
-		
-		context.strokeStyle = "#c8c8c8";
-		context.stroke();
-		
-
-        </script>
-    </canvas>
-    -->
     <div id="players">
-      	<span>Schurke999<br/><br/></span>
-      	<span>Spieler2</span>
+      	<canvas id="player1" width="30" height="30"></canvas><span class="player1">Schurke999</span><br/>
+      	<canvas id="player2" width="30" height="30"></canvas><span class="player2">Spieler2</span>
    	</div> 
 
 	</div>

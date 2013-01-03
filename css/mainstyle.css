@@ -171,15 +171,6 @@ footer p {
     transform: translate(0, 4px);
 }
 
-/*
-canvas {
-	background-color:#fefefe;
-	border:5px solid #c8c8c8;
-	border-top:none;
-	margin:40px 0px 20px 20px;
-
-}*/
-
 #playground {
 	height:430px;
 }
@@ -192,6 +183,11 @@ canvas {
 	float:left;
 }
 
+.canvas_div canvas {
+	float:none;
+	position:relative;
+}
+
 canvas {
 	background-color:#fefefe;
 	border:1px solid #c8c8c8;
@@ -201,10 +197,12 @@ canvas {
 
 .arrows_div {
 	margin:0px 0px 0px 20px;
-	width:385px
 }
 
-.arrow {
+.arrows_div canvas {
+}
+
+.arrow, .occupied {
 	border:0px solid black;
 	margin-left:2px;
 	background-color:#FFF;
@@ -215,11 +213,22 @@ canvas {
 #players {
 	float:right;
 	width:200px;
-	margin:0px 100px 0px 0px;
+	margin:0px 120px 0px 0px;
 }
 
-#players img {
-	margin:10px 10px -20px 0px;}
+#players canvas {
+	background-color: #FFF;
+	border:0px solid black;
+	height:30px;
+	width:30px;
+}
+
+#players span {
+	margin:8px 0px 20px 0px;
+	padding-left:10px;
+	position:absolute;
+}
+
 	
 
 
