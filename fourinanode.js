@@ -45,6 +45,7 @@ var messages = {
 }
 
 function validateJSON( msg, expected ) {
+  console.log(msg.length+ " "+expected.length);
   if (msg.length != expected.length)
     return false;
 
@@ -56,6 +57,7 @@ function validateJSON( msg, expected ) {
       return false;
 
     console.log("true");
+    return true;
   }
 };
 
@@ -76,7 +78,10 @@ io.sockets.on('connection', function (socket) {
   socket.on('set player name', function( data ) {
     CLIENTNAME = data;
     debug( console.log("-- new player name: "+CLIENTNAME) );
-    socket.emit('updated player name', CLIENTNAME);
+    if ( CLIENTNAME == data ) 
+      socket.emit('update player name successful', CLIENTNAME);
+    else
+      socket.emit('update player name failed');
   });
 
   socket.on('start game with', function( data ) {
@@ -175,8 +180,8 @@ io.sockets.on('connection', function (socket) {
       },
       $exit: function(cb) {
         cb();
-      }
-    }
+      },
+    },
     running: {
 
       // animate clock every tick
@@ -311,7 +316,7 @@ io.sockets.on('connection', function (socket) {
   });
   console.log(connectFour);
 
-  connectFour.trigger("start");
+  //connectFour.trigger("start");
   //tim.trigger("start");
   //tim.trigger("asdfg");
 
@@ -336,7 +341,7 @@ io.sockets.on('connection', function (socket) {
 
     switch( message.stage ) {
       case 1:
-        validateJSON(message, message.search);
+        validateJSON(message, messages.search);
         var length = connectFour._opponents.length;
 
         for (var i = 0; i < length; i++) {
@@ -348,34 +353,34 @@ io.sockets.on('connection', function (socket) {
         break;
       case 2:;
         if ( message.clientname !== undefined ) {
-          validateJSON(message, message.found);
+          validateJSON(message, messages.found);
           // game request
 
           //  found:    JSON.stringify({version:VERSION,clienttype:CLIENTTYPE,stage:2,clientname:CLIENTNAME}),
         } else {
-          validateJSON(message, message.accepted);
+          validateJSON(message, messages.accepted);
           // game accepted
             //accepted: JSON.stringify({version:VERSION,clienttype:CLIENTTYPE,stage:2}),
         }
         break;
       case 3:
-        validateJSON(message, message.ready);
+        validateJSON(message, messages.ready);
         //ready:    JSON.stringify({version:VERSION,clienttype:CLIENTTYPE,stage:3}),
         // ready to play
         break;
       case 4:
-        validateJSON(message, message.turn);
+        validateJSON(message, messages.turn);
         //turn:     JSON.stringify({version:VERSION,clienttype:CLIENTTYPE,stage:4,column:COLUMN, turn:TURN}),
         // receive turn
         break;
       case 5:
-        validateJSON(message, message.end);
+        validateJSON(message, messages.end);
         //end:      JSON.stringify({version:VERSION,clienttype:CLIENTTYPE,stage:5}),
         // game ended
         break;
       // case 99
       case 99:
-        validateJSON(message, message.abort);
+        validateJSON(message, messages.abort);
         //abort:    JSON.stringify({version:VERSION,clienttype:CLIENTTYPE,stage:99})
         // error
         break;

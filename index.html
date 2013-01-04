@@ -11,9 +11,11 @@
     <script>
         var socket = io.connect('http://localhost:8080');
 
-        socket.on("updated player name", function( data ) {
+        socket.on("update player name successful", function( data ) {
             console.log("new name successfully set to: "+data);
         });
+
+        socket.on("update player name failed", function() { alert("fail");});
   </script>
   <script type="css">
   :invalid {
