@@ -41,7 +41,8 @@
 			if(counter >= 4)
 			{
 				alert(getPlayer + " hat gewonnen!");
-				location.reload(true);
+                playAgain();
+				//location.reload(true);
 			}
 		}
 		
@@ -77,14 +78,14 @@
 			col = colNumber;
 			counter = 0;
 			
-			while(r>0 && col<5)
+			while(col>0 && r<6)
 			{
-				r--;
-				col++;
+				r++;
+				col--;
 			}
 			
 			for(var i=0; i<6; i++) {
-				console.log(r+"_"+col);
+				//console.log(r+"_"+col);
 				if(content[r+"_"+col] == getPlayer){
 					counter++;
 				} else {
@@ -92,8 +93,8 @@
 				}
 				
 				Winner(counter);
-				col--;
-				r++;
+				col++;
+				r--;
 			}
 		}
 		
@@ -103,14 +104,14 @@
 			r = row;
 			col = colNumber;
 			
-			while(r>0 && col>0)
+			while(r>1 && col>1)
 			{
 				r--;
 				col--;
 			}
 
 			for(var i=0; i<6; i++) {
-				//console.log(r+"_"+col);
+				console.log(r+"_"+col);
 				if(content[r+"_"+col] == getPlayer){
 					counter++;
 				} else {
@@ -153,15 +154,30 @@
 			context.drawImage(arrow, 10, 10);
 		}
 		
-		//This handles the mouse-over Effect on arrows (changing colors)
-		$('.arrow').mouseenter(function() {
-			c = document.getElementById($(this).attr('id'));
+		//This handles the mouse-over Effect on arrows and fields (changing colors)
+		//$('.arrow').mouseenter(function() {
+        $('canvas').mouseenter(function() {
+            var currentColumn = $(this).attr('id').charAt(8);
+			//c = document.getElementById($(this).attr('id'));
+            c = document.getElementById('canvas'+0+'_'+currentColumn);
 			context = c.getContext("2d");
 			context.drawImage(arrow2, 10, 10);
+
+            //To change the colors of the rows by hovering
+            for(var i=1; i<7; i++) {
+                $('#canvas'+i+'_'+currentColumn).css("background-color", "#eeeeee");
+            }
+
 		}).mouseleave(function() {
-			c = document.getElementById($(this).attr('id'));
+			//c = document.getElementById($(this).attr('id'));
+            currentColumn = $(this).attr('id').charAt(8);
+            c = document.getElementById('canvas'+0+'_'+currentColumn);
 			context = c.getContext("2d");
 			context.drawImage(arrow, 10, 10);
+
+            for(var i=1; i<7; i++) {
+                $('#canvas'+i+'_'+currentColumn).css("background-color", "#fefefe");
+            }
 		});
 		
 		//making Coins for player 1 and player 2
@@ -180,8 +196,8 @@
 	 
 	function canvasClicked(canvasNumber, colNumber){   
 		
-		if(canvasNumber==0)
-		{
+		/*if(canvasNumber==0)
+		{  */
 				//First Player; Equal == first, Not Equal == second player
 				if(turn%2==0){
 					
@@ -251,13 +267,12 @@
 					alert("Unentschieden!");
 					location.reload(true);
 				}
-			}		 
+
 	}
 	 
 	function playAgain(){
 	    replay=confirm("Noch eine Runde?");
 	    if(replay==true){
-	        alert("Okay, neue Runde!");
 	        location.reload(true);
 	    }
 	    else{

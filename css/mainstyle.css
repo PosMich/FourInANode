@@ -181,6 +181,7 @@ footer p {
 	width:385px;
 	background-color:#CCC;
 	float:left;
+    cursor: pointer;
 }
 
 .canvas_div canvas {
@@ -197,6 +198,7 @@ canvas {
 
 .arrows_div {
 	margin:0px 0px 0px 20px;
+    cursor: pointer;
 }
 
 .arrows_div canvas {
