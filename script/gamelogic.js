@@ -27,6 +27,104 @@
 		context.closePath();
 	}
 	
+	//Functions to get the Winner
+	function checkWinner(row, colNumber){
+		var counter;
+		var getPlayer = content[row+"_"+colNumber];
+		
+		checkVertical();
+		checkHorizontal(row);
+		checkDiagonal1(row);
+		checkDiagonal2(row);
+		
+		function Winner(counter) {
+			if(counter >= 4)
+			{
+				alert(getPlayer + " hat gewonnen!");
+				location.reload(true);
+			}
+		}
+		
+		function checkVertical() {
+			counter = 0;
+			for(var i=1; i<7; i++) {
+				if(content[i+"_"+colNumber] == getPlayer){
+					counter++;
+				} else {
+					counter = 0;
+				}
+				Winner(counter);
+				
+			}
+		}
+		
+		function checkHorizontal(row) {
+			counter = 0;
+			for(var i=1; i<8; i++) {
+				if(content[row+"_"+i] == getPlayer){
+					counter++;
+				} else {
+					counter = 0;
+				}
+				Winner(counter);
+				
+			}
+		}
+		
+		//check for 4 diagonal stones from bottom left to top right
+		function checkDiagonal1(row){
+			r = row;
+			col = colNumber;
+			counter = 0;
+			
+			while(r>0 && col<5)
+			{
+				r--;
+				col++;
+			}
+			
+			for(var i=0; i<6; i++) {
+				console.log(r+"_"+col);
+				if(content[r+"_"+col] == getPlayer){
+					counter++;
+				} else {
+					counter = 0;
+				}
+				
+				Winner(counter);
+				col--;
+				r++;
+			}
+		}
+		
+		//check for 4 diagonal stones from bottom right to top left
+		function checkDiagonal2(row){
+			counter = 0;
+			r = row;
+			col = colNumber;
+			
+			while(r>0 && col>0)
+			{
+				r--;
+				col--;
+			}
+
+			for(var i=0; i<6; i++) {
+				//console.log(r+"_"+col);
+				if(content[r+"_"+col] == getPlayer){
+					counter++;
+				} else {
+					counter = 0;
+				}
+				
+				Winner(counter);
+				r++;
+				col++;
+			}
+		}
+	}
+	
+	
 	//Instanciate Arrays
 	window.onload=function(){
 	    content = new Array();
@@ -101,7 +199,7 @@
 							content[i+"_"+colNumber] = 'player1';
 							
 							turn++;
-							checkWinner(i);
+							checkWinner(i, colNumber);
 							freeField=true;
 						}
 						i--;
@@ -131,7 +229,7 @@
 							field_occupied[i+"_"+colNumber]=true;
 							
 							turn++;
-							checkWinner(i);
+							checkWinner(i, colNumber);
 							freeField=true;
 						}
 					i--;
@@ -143,89 +241,6 @@
 						context = c.getContext("2d");
 						context.drawImage(cross, 10, 10);
 						$("#" + theCanvas).unbind('mouseenter mouseleave');
-					}
-				}
-				
-				function checkWinner(row){
-					var counter;
-					var getPlayer = content[i+"_"+colNumber];
-					
-					checkVertical();
-					checkHorizontal(row);
-					checkDiagonal1(row);
-					checkDiagonal2(row);
-					
-					function Winner(counter) {
-						if(counter == 4)
-						{
-							alert(getPlayer + " hat gewonnen!");
-							location.reload(true);
-						}
-					}
-					
-					function checkVertical() {
-						counter = 0;
-						for(var i=1; i<7; i++) {
-							if(content[i+"_"+colNumber] == getPlayer){
-								counter++;
-							} else {
-								counter = 0;
-							}
-							Winner(counter);
-							
-						}
-					}
-					
-					function checkHorizontal(row) {
-						counter = 0;
-						for(var i=1; i<8; i++) {
-							if(content[row+"_"+i] == getPlayer){
-								counter++;
-							} else {
-								counter = 0;
-							}
-							Winner(counter);
-							
-						}
-					}
-					
-					//check for 4 diagonal stones from bottom left to top right
-					function checkDiagonal1(row){
-						r = row;
-						col = colNumber;
-						counter = 0;
-						for(var i=0; i<6; i++) {
-							//console.log(r+"_"+col);
-							if(content[r+"_"+col] == getPlayer){
-								counter++;
-							} else {
-								counter = 0;
-							}
-							
-							Winner(counter);
-							col--;
-							r++;
-						}
-					}
-					
-					//check for 4 diagonal stones from bottom right to top left
-					function checkDiagonal2(row){
-						counter = 0;
-						r = row;
-						col = colNumber;
-
-						for(var i=0; i<6; i++) {
-							//console.log(r+"_"+col);
-							if(content[r+"_"+col] == getPlayer){
-								counter++;
-							} else {
-								counter = 0;
-							}
-							
-							Winner(counter);
-							r++;
-							col++;
-						}
 					}
 				}
 				
