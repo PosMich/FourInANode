@@ -11,8 +11,8 @@
     <script>
         var socket = io.connect('http://localhost:8080');
 
-        socket.on("new name", function( data ) {
-            console.log("new name: "+data);
+        socket.on("updated player name", function( data ) {
+            console.log("new name successfully set to: "+data);
         });
   </script>
   <script type="css">
@@ -28,7 +28,8 @@
 $(document).ready(function(){
     $("#player").click( function(e) {
         e.preventDefault();
-        socket.emit("set player", $("#player_name").val() );
+        console.log("trying to set new player name " + $("#player_name").val());
+        socket.emit("set player name", $("#player_name").val() );
     });
 });
 </script>
