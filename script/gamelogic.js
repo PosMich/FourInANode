@@ -12,6 +12,14 @@
 	var arrow;
 	var arrow2;
 	var cross;
+
+    arrow = new Image();
+    arrow2 = new Image();
+    cross = new Image();
+    arrow.src = 'img/Arrow2.png';
+    arrow2.src = 'img/Arrow.png';
+    cross.src = 'img/x.png';
+
 	
 	function drawCircle(theCanvas, fillColor, strokeColor, posX, posY, radius) {
 		c = document.getElementById(theCanvas);
@@ -133,12 +141,12 @@
 		freeField = false;
 		$('.player1').css('font-weight','bold');
 		
-		arrow = new Image();
+		/*arrow = new Image();
 		arrow2 = new Image();
 		cross = new Image();
 		arrow.src = 'img/Arrow2.png';
 		arrow2.src = 'img/Arrow.png';
-		cross.src = 'img/x.png';
+		cross.src = 'img/x.png'; */
 		
 		for(var i=1; i<7; i++){
 			for(var j=1; j<8; j++){
@@ -274,8 +282,7 @@
 	    replay=confirm("Noch eine Runde?");
 	    if(replay==true){
 	        location.reload(true);
-	    }
-	    else{
+	    }else{
 	        alert("Dann eben nicht!");
 	}
 	 
