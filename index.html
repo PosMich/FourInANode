@@ -6,6 +6,7 @@
 <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,200,300,300italic,700,600&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
 <link href='http://fonts.googleapis.com/css?family=Amatic+SC:400,700' rel='stylesheet' type='text/css'>
 <script src="script/jquery.js"></script>
+<script src="script/gamelogic.js"></script>
 <title>Home</title>
 </head>
 
@@ -32,6 +33,103 @@
         <li><a href="playground.html" class="button"><span>Play</span></a>AliTheBeast</li>
         <li><a href="playground.html" class="button"><span>Play</span></a>TheBestGeorge666</li>
     </ul><br/>
+    </div> <!-- Close main -->
+
+       <div id="main">
+    <p>Du bist angemeldet als: <b>Schurke999</b></p>
+    <p>Los gehts!</p><br/><br/>
+    
+    
+    <div id="playground">
+    
+    <div class="arrows_div">
+        <canvas id="canvas0_1" width="50" height="50" onclick="canvasClicked(0, 1)" class="arrow"></canvas>
+        <canvas id="canvas0_2" width="50" height="50" onclick="canvasClicked(0, 2)" class="arrow"></canvas>
+        <canvas id="canvas0_3" width="50" height="50" onclick="canvasClicked(0, 3)" class="arrow"></canvas>
+        <canvas id="canvas0_4" width="50" height="50" onclick="canvasClicked(0, 4)" class="arrow"></canvas>
+        <canvas id="canvas0_5" width="50" height="50" onclick="canvasClicked(0, 5)" class="arrow"></canvas>
+        <canvas id="canvas0_6" width="50" height="50" onclick="canvasClicked(0, 6)" class="arrow"></canvas>
+        <canvas id="canvas0_7" width="50" height="50" onclick="canvasClicked(0, 7)" class="arrow"></canvas> <br/>
+    </div>
+    
+    <div class="canvas_div">
+        <canvas id="canvas1_1" width="50" height="50" onclick="canvasClicked(1, 1)"></canvas>
+        <canvas id="canvas1_2" width="50" height="50" onclick="canvasClicked(1, 2)"></canvas>
+        <canvas id="canvas1_3" width="50" height="50" onclick="canvasClicked(1, 3)"></canvas>
+        <canvas id="canvas1_4" width="50" height="50" onclick="canvasClicked(1, 4)"></canvas>
+        <canvas id="canvas1_5" width="50" height="50" onclick="canvasClicked(1, 5)"></canvas>
+        <canvas id="canvas1_6" width="50" height="50" onclick="canvasClicked(1, 6)"></canvas>
+        <canvas id="canvas1_7" width="50" height="50" onclick="canvasClicked(1, 7)"></canvas> <br/>
+        
+        <canvas id="canvas2_1" width="50" height="50" onclick="canvasClicked(2, 1)"></canvas>
+        <canvas id="canvas2_2" width="50" height="50" onclick="canvasClicked(2, 2)"></canvas>
+        <canvas id="canvas2_3" width="50" height="50" onclick="canvasClicked(2, 3)"></canvas>
+        <canvas id="canvas2_4" width="50" height="50" onclick="canvasClicked(2, 4)"></canvas>
+        <canvas id="canvas2_5" width="50" height="50" onclick="canvasClicked(2, 5)"></canvas>
+        <canvas id="canvas2_6" width="50" height="50" onclick="canvasClicked(2, 6)"></canvas>
+        <canvas id="canvas2_7" width="50" height="50" onclick="canvasClicked(2, 7)"></canvas> <br/>
+        
+        <canvas id="canvas3_1" width="50" height="50" onclick="canvasClicked(3, 1)"></canvas>
+        <canvas id="canvas3_2" width="50" height="50" onclick="canvasClicked(3, 2)"></canvas>
+        <canvas id="canvas3_3" width="50" height="50" onclick="canvasClicked(3, 3)"></canvas>
+        <canvas id="canvas3_4" width="50" height="50" onclick="canvasClicked(3, 4)"></canvas>
+        <canvas id="canvas3_5" width="50" height="50" onclick="canvasClicked(3, 5)"></canvas>
+        <canvas id="canvas3_6" width="50" height="50" onclick="canvasClicked(3, 6)"></canvas>
+        <canvas id="canvas3_7" width="50" height="50" onclick="canvasClicked(3, 7)"></canvas> <br/>
+        
+        <canvas id="canvas4_1" width="50" height="50" onclick="canvasClicked(4, 1)"></canvas>
+        <canvas id="canvas4_2" width="50" height="50" onclick="canvasClicked(4, 2)"></canvas>
+        <canvas id="canvas4_3" width="50" height="50" onclick="canvasClicked(4, 3)"></canvas>
+        <canvas id="canvas4_4" width="50" height="50" onclick="canvasClicked(4, 4)"></canvas>
+        <canvas id="canvas4_5" width="50" height="50" onclick="canvasClicked(4, 5)"></canvas>
+        <canvas id="canvas4_6" width="50" height="50" onclick="canvasClicked(4, 6)"></canvas>
+        <canvas id="canvas4_7" width="50" height="50" onclick="canvasClicked(4, 7)"></canvas> <br/>
+        
+        <canvas id="canvas5_1" width="50" height="50" onclick="canvasClicked(5, 1)"></canvas>
+        <canvas id="canvas5_2" width="50" height="50" onclick="canvasClicked(5, 2)"></canvas>
+        <canvas id="canvas5_3" width="50" height="50" onclick="canvasClicked(5, 3)"></canvas>
+        <canvas id="canvas5_4" width="50" height="50" onclick="canvasClicked(5, 4)"></canvas>
+        <canvas id="canvas5_5" width="50" height="50" onclick="canvasClicked(5, 5)"></canvas>
+        <canvas id="canvas5_6" width="50" height="50" onclick="canvasClicked(5, 6)"></canvas>
+        <canvas id="canvas5_7" width="50" height="50" onclick="canvasClicked(5, 7)"></canvas> <br/>
+        
+        <canvas id="canvas6_1" width="50" height="50" onclick="canvasClicked(6, 1)"></canvas>
+        <canvas id="canvas6_2" width="50" height="50" onclick="canvasClicked(6, 2)"></canvas>
+        <canvas id="canvas6_3" width="50" height="50" onclick="canvasClicked(6, 3)"></canvas>
+        <canvas id="canvas6_4" width="50" height="50" onclick="canvasClicked(6, 4)"></canvas>
+        <canvas id="canvas6_5" width="50" height="50" onclick="canvasClicked(6, 5)"></canvas>
+        <canvas id="canvas6_6" width="50" height="50" onclick="canvasClicked(6, 6)"></canvas>
+        <canvas id="canvas6_7" width="50" height="50" onclick="canvasClicked(6, 7)"></canvas> <br/>    
+    </div>
+
+    <div id="players">
+        <canvas id="player1" width="30" height="30"></canvas><span class="player1">Schurke999</span><br/>
+        <canvas id="player2" width="30" height="30"></canvas><span class="player2">Spieler2</span>
+    </div> 
+
+    </div>
+
+    <div id="main">
+        <h2>Über das Projekt: </h2>
+        <p>
+            Dies ist ein Studentenprojekt der FH-Salzburg von Slamanig Sebastian, Poschacher Michael & Lederer Lisa. 
+            Dabei kann man übers Internet mit Freunden auf der ganzen Welt <b>4 Gewinnt</b> spielen.
+    </p>
+        
+        <h2>Anleitung: </h2>
+        <p>So spielt man:</p>
+        <span class="main">
+            <ul class="liste_wrapper">
+                <li class="liste">Zuerst muss man sich anmelden und einen Benutzernamen auswählen.</li>
+                <li class="liste">Dann wählt man aus einer Liste vorhandener Spieler seinen Gegner aus.</li>
+                <li class="liste">Es gewinnt derjenige, der zuerst vier Spielsteine seiner Farbe horizontal, vertikal oder diagonal in einer Reihe hat.</li>
+                <li class="liste">Zum Setzen eines Steines muss man mit der Maus entweder auf ein Quadrat oder eine Reihe klicken</li>
+                <li class="liste">Danach fällt der Spielstein in der Reihe auf den nächsten verfügbaren Spielslot.</li>
+                <li class="liste">Nach dem Setzen ist der andere Spieler an der Reihe.</li>
+            </ul>
+        </span>
+    
+
     </div> <!-- Close main -->
 
 
