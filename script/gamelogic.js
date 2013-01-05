@@ -7,11 +7,15 @@
 	var replay;
 	var field_occupied;
 	var freeField;
+	var player_name;
+    var opponent_name;
+    var enabled = true;
 	
 	//Variables for Pictures
 	var arrow;
 	var arrow2;
 	var cross;
+
 
     arrow = new Image();
     arrow2 = new Image();
@@ -19,6 +23,111 @@
     arrow.src = 'img/Arrow2.png';
     arrow2.src = 'img/Arrow.png';
     cross.src = 'img/x.png';
+
+    $(".play").on("click", function() {
+        hideAll();
+        $(".mainLogOn").css("display", "block");
+    })
+
+    $(".about").on("click", function() {
+        hideAll();
+        $(".mainAbout").css("display", "block");
+    });
+
+    function startGame() {
+        $(".mainLogOn").css("display", "block");
+        $(".mainLogOn").animate({opacity: 1}, 1000);
+        $("p.info").html("Wähle zuerst deinen Namen.");
+
+        $("#logOnPlay").on("click", function() {
+            var msg = "";
+            var $_logOn = $("#logOnText");
+            var logOnLength = $_logOn.val().length;
+            console.log(logOnLength)
+            if( logOnLength == 0 )
+                msg = "Bitte geben Sie zuerst Ihren Namen ein.";
+            else {
+                if( logOnLength < 5 )
+                    msg = "Bitte wählen Sie einen Namen mit mehr als 5 Zeichen.";
+                if( logOnLength > 20 )
+                    msg = "Bitte wählen Sie einen Namen mit weniger als 20 Zeichen.";
+            }
+
+            if( msg.length == 0) {
+                $("p.error").html("");
+                $("p.error").hide();
+                // call second stage
+                player_name = $_logOn.val()
+                viewPlayers( false );
+            } else {
+                showError( msg );
+            }
+        });    
+    }
+    
+
+    function viewPlayers( replay ) {
+
+    	if( !replay ) {
+	        show(".mainLogOn", ".mainStart", function() {
+	        	$("p.info").html("Wähle einen Spieler aus, den du in 4-Gewinnt besiegen möchtest!<br/>Du bist angemeldet als <b>" + player_name + "</b>.");
+	        });
+	    } else {
+	    	resetField();
+	    	show(".mainPlayground", ".mainStart", function() {
+	        	$("p.info").html("Wähle einen Spieler aus, den du in 4-Gewinnt besiegen möchtest!<br/>Du bist angemeldet als <b>" + player_name + "</b>.");
+	        });
+	    }
+      
+        $(".toPlayground").live("click", function() {
+            opponent_name = $(this).next().text();
+            startPlayground( false );
+        });
+    }
+
+    function startPlayground( replay ) {
+    	console.log("play");
+    	if(!replay) {
+	        show(".mainStart", ".mainPlayground", function() {
+	        	$("p.info").html("Du bist angemeldet als <b>" + player_name + ".<br />Los geht's!</b>");
+		        $("span.player1").html( player_name );
+		        $("span.player2").html( opponent_name );
+	        });
+	    } else {
+	    	show(".popup", ".mainPlayground", function() {})
+	    	resetField();
+	    }
+    }
+
+    function showError( msg ) {
+        console.log("error :: " + msg)
+        $("p.error").html(msg);
+        $("p.error").show();
+    }
+
+    function show( current, target, doThis ) {
+        $(current).animate( {opacity: 0}, 400);
+       	$(current).queue("fx", function(next) { 
+       		$(this).css("display", "none");
+       		if(typeof(doThis)=="function")
+       			doThis();
+       		console.log("from: " + current + " to " + target);
+       		$(target).css("display", "block");
+       		$(target).animate({opacity: 1}, 1000);
+       		console.log("jetzt wurde eingeblendet");
+       		next();
+       	});
+    }
+
+    function resetField() {
+    	for(var i=1; i<7; i++){
+			for(var j=1; j<8; j++){
+				field_occupied[i + "_" + j] = false;
+				content[i + "_" + j]='';
+				resetCanvas( "canvas"+i+"_"+j );
+			}
+		}
+    }
 
 	
 	function drawCircle(theCanvas, fillColor, strokeColor, posX, posY, radius) {
@@ -34,9 +143,18 @@
 		context.stroke();
 		context.closePath();
 	}
+
+	function resetCanvas( theCanvas ) {
+		c = document.getElementById(theCanvas);
+		c.width = c.width;
+		//context = c.getContext("2d");
+		//context.width = context.width;
+	}
+
 	
 	//Functions to get the Winner
 	function checkWinner(row, colNumber){
+		console.log("checkWinner");
 		var counter;
 		var getPlayer = content[row+"_"+colNumber];
 		
@@ -46,11 +164,9 @@
 		checkDiagonal2(row);
 		
 		function Winner(counter) {
-			if(counter >= 4)
-			{
-				alert(getPlayer + " hat gewonnen!");
-                playAgain();
-				//location.reload(true);
+			if(counter >= 4) {
+				enabled = false;
+	            playAgain( getPlayer );				
 			}
 		}
 		
@@ -207,6 +323,9 @@
 		/*if(canvasNumber==0)
 		{  */
 				//First Player; Equal == first, Not Equal == second player
+
+			if( enabled ) {
+
 				if(turn%2==0){
 					
 					var i=6;
@@ -220,7 +339,7 @@
 							
 							//To see which field is already occupied with a stone
 							field_occupied[i+"_"+colNumber]=true;
-							content[i+"_"+colNumber] = 'player1';
+							content[i+"_"+colNumber] = player_name;
 							
 							turn++;
 							checkWinner(i, colNumber);
@@ -249,7 +368,7 @@
 							$('.player1').css('font-weight','bold');
 							$('.player2').css('font-weight','normal');
 							
-							content[i+"_"+colNumber] = 'player2';
+							content[i+"_"+colNumber] = opponent_name;
 							field_occupied[i+"_"+colNumber]=true;
 							
 							turn++;
@@ -275,17 +394,27 @@
 					alert("Unentschieden!");
 					location.reload(true);
 				}
+			}
 
 	}
 	 
-	function playAgain(){
-	    replay=confirm("Noch eine Runde?");
-	    if(replay==true){
-	        location.reload(true);
-	    }else{
-	        alert("Dann eben nicht!");
-	}
-	 
+	function playAgain( player ){
+		var text = ( player == player_name ) ? "Du hast gewonnen!!" : opponent_name + " hat gewonnen!!";
+		$(".popup").html('<h2>' + text + '</h2><p>Nochmal spielen?</p><p class="options"><a href="#" class="button replay_yes" id="logOnPlay"><span>Ja</span></a><a href="#" class="button replay_no" id="logOnPlay"><span>Nein</span></a></p>');
+		
+		$(".popup").css("display", "block");
+		$(".popup").animate({opacity: 1}, 1000);
+
+		$(".replay_yes").live("click", function() { 
+			$(".popup").animate({opacity: 0}, 400);
+			enabled = true;
+			startPlayground( true );
+		});
+		$(".replay_no").on("click", function() {
+			$(".popup").animate({opacity: 0}, 400);
+			enabled = true;
+			viewPlayers( true );
+		});
 	}
 	
 	

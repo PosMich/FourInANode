@@ -26,7 +26,6 @@ h2 {
 }
 
 #wrapper {
-	height:auto;
 	width:800px;
 	background-color:#FFF;
 	margin:auto;
@@ -42,21 +41,21 @@ header {
 	background-color:#333;
 }
 
-#main {
-	min-height:300px;
+.main {
+	min-height:500px;
 	height:auto;
 }
 
-#main p {
+.main p {
 	padding:10px 10px 10px 20px;
 	line-height:1.5;
 }
 
-#main ul {
+.main ul {
 		padding:0px 10px 30px 40px;
 }
 
-#main li {
+.main li {
 	padding:0px 0px 5px 10px;
 	font-weight:300;
 }
@@ -231,6 +230,82 @@ canvas {
 	position:absolute;
 }
 
-	
+.mainLogOn, .mainStart, .mainPlayground, .mainAbout {
+	display: none; opacity: 0;
+}
 
+#logOn {
+	position: relative;
+	padding: 10px; margin: 20px	100px;
+	height: 150px; line-height: 150px;
+	text-align: center;
+}
 
+input {
+	font-size:25px; position: relative;
+	vertical-align: middle;
+	padding: 10px; width: 250px;
+	float:left;
+	margin-left: 90px; margin-top: 40px;
+	border: 1px solid #333;
+}
+
+.start {
+	vertical-align: middle;
+	position: relative;
+	font-family:'Amatic SC', Tahoma;
+	font-size:30px;
+	line-height: 30px;
+	float:left;
+	margin-left: 20px; margin-top: 45px;
+}
+
+button:hover {
+	cursor: pointer;
+}
+
+p.error {
+	display: none;
+}
+
+div.player {
+	float: left;
+	margin: 8px 0px 15px 15px;
+}
+
+a.button {
+	float: left;
+}
+
+li {
+	clear: both;
+}
+
+.popup {
+	background-color: #FFF;
+	width: 500px;
+	height: 300px;
+	margin-top: 50px;
+	margin-left: 150px;
+	position: absolute;
+	z-index: 500;
+	-webkit-box-shadow: 0 0px 0 #c3c3c5, 0px 0px 20px 10px rgba(0, 0, 0, .2);
+    -moz-box-shadow: 0 0px 0 #c3c3c5, 0px 0px 20px 10px rgba(0, 0, 0, .2);
+    box-shadow: 0 0px 0 #c3c3c5, 0px 0px 20px 10px rgba(0, 0, 0, .2);
+    text-align: center;
+    display: none; opacity: 0;
+}
+
+.popup h2 {
+	font-size: 40px;
+}
+
+.popup h2, .popup p {
+	margin-top: 40px;
+}
+
+.popup p.options {
+	width: 160px;
+	margin: 15px auto;
+	position: relative;
+}
