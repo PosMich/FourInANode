@@ -15,7 +15,15 @@
             console.log("new name successfully set to: "+data);
         });
 
-        socket.on("update player name failed", function() { alert("fail");});
+        socket.on("update player name failed", function() { alert("player name update failed");});
+
+        socket.on("game start successful", function() {console.log("game started")});
+
+        socket.emit("get player name");
+
+        socket.on("player name", function (data) {
+          console.log("player name: " + data);
+        })
   </script>
   <script type="css">
   :invalid {
@@ -24,7 +32,8 @@
   </script>
 </head>
 <body>
-  <input type="text" id="player_name" placeholder="Mein Name"><a href="#" id="player">Name &auml;ndern</a>
+  <p><input type="text" id="player_name" placeholder="Mein Name"><a href="#" id="player">Name &auml;ndern</a></p>
+  <p><a href="#" id="start">Start with player</a></p>
 </body>
 <script>
 $(document).ready(function(){
@@ -33,6 +42,11 @@ $(document).ready(function(){
         console.log("trying to set new player name " + $("#player_name").val());
         socket.emit("set player name", $("#player_name").val() );
     });
+    $("#start").click( function(e) {
+        e.preventDefault();
+        console.log("trying to start game");
+        socket.emit("start game with", "Player 1");
+    })
 });
 </script>
 </html>
