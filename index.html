@@ -24,6 +24,26 @@
         socket.on("player name", function (data) {
           console.log("player name: " + data);
         })
+
+        socket.on("update opponent list", function( data ) {
+          console.log(data);
+          var html = "<table>";
+          for (var i=0; i<data.length; i++) {
+            html += "<tr><td class=\"clientname\">Clientname: "+data[i].clientname+"</td><td class=\"ip\">IP: "+data[i].ip+"</td><td class=\"keepalive\">Keepalive: "+data[i].keepalive+"</td><td><a href=\"#\" id=\""+i+"\" class=\"playwith\">Play with me!</a></td></tr>";
+          }
+          $("#found").html(html);
+          $(".playwith").each(function() {
+              $(this).click( function(e) {
+                e.preventDefault();
+                console.log("send game request");
+                socket.emit("send game request", $(this).parent().parent().find(".clientname").html());
+              });
+          });
+        });
+
+        socket.on("play request accepted", function( data ) {
+          
+        }
   </script>
   <script type="css">
   :invalid {
@@ -32,8 +52,13 @@
   </script>
 </head>
 <body>
-  <p><input type="text" id="player_name" placeholder="Mein Name"><a href="#" id="player">Name &auml;ndern</a></p>
-  <p><a href="#" id="start">Start with player</a></p>
+  <p><a href="#" id="startfsm">Start state machine</a></p>
+  <p>
+    <input type="text" id="player_name" placeholder="Mein Name">
+    <a href="#" id="player">Name &auml;ndern</a>
+  </p>
+  <p><a href="#" id="start">Start searching</a></p>
+  <div id="found"></div>
 </body>
 <script>
 $(document).ready(function(){
@@ -45,6 +70,11 @@ $(document).ready(function(){
     $("#start").click( function(e) {
         e.preventDefault();
         console.log("trying to start game");
+        socket.emit("start searching opponents");
+    })
+    $("#startfsm").click( function(e) {
+        e.preventDefault();
+        console.log("trying to start state machine");
         socket.emit("start game with", "Player 1");
     })
 });

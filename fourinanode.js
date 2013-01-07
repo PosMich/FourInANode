@@ -93,6 +93,7 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('disconnect', function()  {
     debug( console.log("-- USER DISCONNECTED") );
+    connectFour.trigger("error");
   });
 
   socket.on("verify version", function( data ) {
@@ -114,7 +115,6 @@ io.sockets.on('connection', function (socket) {
   /************** STATE MACHINE GOES HERE *************************/
   var connectFour = fsmjs({
     start: {
-      // when "start" pushed an interval that sends Message every 2000ms.
       "start": function(cb) {
         debug( console.log("/\\/\\ START STAGE MACHINE"));
         debug( console.log("/\\/\\ STAGE 0: 'start'"));
@@ -157,60 +157,99 @@ io.sockets.on('connection', function (socket) {
     findOpponents: {
       $enter: function( cb ) {
         debug( console.log("/\\/\\ ENTER STAGE 1: find Opponents"));
+
+        // set interval with search message and update keepalive of opponents
         this._msg = messages.search;
         this._msg.clientname = this._name;
+        this._msg = new Buffer( JSON.stringify(this._msg) );
+        console.log("************ msg" + this._msg);
 
-        // update keepalive
-        this._sendInterval(function() {
-          for (var i = 0; i < this._opponents.length; i++) {
-            if (this._opponents[i].keepalive <= 1) {
-              debug( console.log("/\\/\\ STAGE 1: removing opponent: " + this._opponents[i].name));
-              this._opponents.splice(i,1);
-            } else {
-              this._opponents[i].keepalive--;
-            }
-          }
-        });
+        this._endTransmission();
+        this._interval = this.interval( "gameTick", FREQUENCY);
+
+        var that = this;
 
         // check incoming messages
         server.on("message", function(msg, rinfo){
           debug(console.log("* server got: " + msg + " from " + rinfo.address + ":" + rinfo.port));
-          var message = JSON.parse( msg );
-          
-          if ( message.stage == 2 && message.version == VERSION ) {
-            if ( message.clientname != undefined ) {
-              // if clientname exists: general play message
-              if ( this._validateMessage( message, messages.found) == true ) {
+          var message;
+          try {
+            message =JSON.parse( msg ) 
+            if ( message.stage == 1 ) {
+              if ( that._validateMessage(message, messages.search) == true ) {
                 var found = false;
-                for (var i=0; i < this._opponents.length; i++) {
-                  if ( this._opponents[i].ip == rinfo.address) {
-                    this._opponents[i].keepalive = 10;
-                    found = true;
+                  for (var i=0; i < that._opponents.length; i++) {
+                    if ( that._opponents[i].ip == rinfo.address && that._opponents[i].stage == 1) {
+                      that._opponents[i].keepalive = 10;
+                      that._opponents[i].clientname = message.clientname;
+                      found = true;
+                    }
                   }
-                }
-                if ( found == false )
-                  this._opponents.push({name: messages.clientname, ip: rinfo.address, keepalive: 10});
+                  if ( found == false )
+                    that._opponents.push({clientname: message.clientname, ip: rinfo.address, keepalive: 10, stage: 1});
               }
-              this.qemit( "update opponents list", this._opponents);
-
             } else {
-              // if clientname doesn't exist: want's to play with you
-              if (this._validateMessage( message, messages.accepted) == true) {
-                for (var i=0; i < this._opponents.length; i++) {
-                  if ( message.clientname == this._opponents[i].name ) {
-                    // emit play request
-                    this.qemit( "play request", this._opponents[i]);
+              if ( message.stage == 2 && message.version == VERSION ) {
+                if ( message.clientname != undefined ) {
+                  // if clientname exists: general play message
+                  if ( that._validateMessage( message, messages.found) == true ) {
+                    var found = false;
+                    for (var i=0; i < that._opponents.length; i++) {
+                      if ( that._opponents[i].ip == rinfo.address && that._opponents[i].wanttoplay == false) {
+                        that._opponents[i].keepalive = 10;
+                        that._opponents[i].clientname = message.clientname;
+                        found = true;
+                      }
+                    }
+                    if ( found == false )
+                      that._opponents.push({clientname: message.clientname, ip: rinfo.address, keepalive: 10, stage: 2});
+                  }
+                  that.qemit( "update opponents list", that._opponents);
+
+                } else {
+                  // if clientname doesn't exist: want's to play with you
+                  if (that._validateMessage( message, messages.accepted) == true) {
+                    for (var i=0; i < that._opponents.length; i++) {
+                      if ( message.clientname == that._opponents[i].clientname && that._opponents[i].stage == 2 ) {
+                        // emit play request
+                        that._oponnents[i].
+                        this.qemit( "play request accepted", that._opponents[i]);
+                      }
+                    }
                   }
                 }
               }
             }
+          } catch (err) {
+            console.log("EEEEEEEEROR parsing JSON - message dropped");
+            //that.trigger("error");
+            cb();
           }
         });
 
         cb();
       },
-      "send game request": function( opponent ) {
-        
+      gameTick: function(cb) {
+        debug( console.log("/\\/\\ STAGE 1: TICK "));
+        for (var i = 0; i < this._opponents.length; i++) {
+            if (this._opponents[i].keepalive < 1) {
+              debug( console.log("/\\/\\ STAGE 1: removing opponent: " + this._opponents[i].clientname));
+              this._opponents.splice(i,1);
+            } else {
+              this._opponents[i].keepalive--;
+            }
+          }
+        this._send(this);
+        this.qemit( "update opponents list", this._opponents);
+        cb();
+      },
+      "send game request": function( cb,  opponent ) {
+        cb();
+      },
+      error: function( cb ) {
+        console.log("error!!!!");
+        this.state = "errorHandler";
+        return( cb() );
       },
       $exit: function( cb ) {
         cb();
@@ -280,7 +319,7 @@ io.sockets.on('connection', function (socket) {
     stopping: {
       $enter: function(cb) {
         debug( console.log("/\\/\\ ENTER STOPPING STAGE"));
-        this.trigger("stopped");
+        this.trigger("e");
         cb();
       },
       // called when the stopping timer elapses. clears the 
@@ -299,32 +338,46 @@ io.sockets.on('connection', function (socket) {
         cb();
       },
 
-      exit: 'error',
+      e: 'error',
       $exit: function(cb) {
         debug( console.log("/\\/\\ EXIT STOPPING STAGE"));
         cb();
       }
 
     },
+    errorHandler: {
+      $enter: function(cb) {
+        debug( console.log("/\\/\\ ENTER ERROR STAGE"));
+        this._endTransmission();
+        cb();
+      },
+      test: function(cb) {
+        console.log("asdfasdf");
+      },
+      $end: function(cb) {
+        debug( console.log("/\\/\\ EXIT ERROR STAGE"));
+        cb();
+      },
+    },
     error: function(cb, state) {
       debug( console.log("/\\/\\ ERROR IN STATE: "+state));
       console.log('An error occured in state', state);
       //connectFour.state = state;
       //connectFour._endTransmission();
-      cb();
     },
 
-    _send: function ( msg ) {
+    _send: function (that) {
       debug( console.log("/\\/\\ HELPER: try to send message") );
-      server.send( msg, 0, msg.length, PORT, this._target, function( err, bytes ) {
+      server.send( that._msg, 0, that._msg.length, PORT, that._target, function( err, bytes ) {
         if (err) throw err;
-        debug(console.log("/\\/\\        msg " + msg + " sent to " + this._target + ":" + PORT));
-      })
+        debug(console.log("/\\/\\        msg " + that._msg + " sent to " + that._target + ":" + PORT));
+      });
     },
 
     _enableBroadcast: function () {
       debug( console.log("/\\/\\ HELPER: enable broadcast") );
       server.setBroadcast(true);
+      cb();
     },
 
     _disableBroadcast: function() {
@@ -332,10 +385,10 @@ io.sockets.on('connection', function (socket) {
       server.setBroadcast(false);
     },
 
-    _updateMessage: function( msg ) {
+    _updateMessage: function(msg ) {
       debug( console.log("/\\/\\ HELPER: update message to '"+msg+"'") );
       var message = new Buffer( msg );
-      this._setInterval( this._send(message) );
+      this._setInterval( this._send(that) );
     },
 
     _endTransmission: function() {
@@ -343,7 +396,7 @@ io.sockets.on('connection', function (socket) {
       clearInterval( this._interval );
     },
 
-    _setInterval: function( func ) {
+    _setInterval: function(func ) {
       debug( console.log("/\\/\\ HELPER: set interval") );
       if ( typeof(func) == "function" ) {
         this._endTransmission();
@@ -351,7 +404,6 @@ io.sockets.on('connection', function (socket) {
         this._interval = this.interval( func, FREQUENCY);
       }
     },
-
     _validateMessage: function ( msg, expected ) {
       debug( console.log("/\\/\\ HELPER: validate message") );
       debug( console.log("/\\/\\         msg '"+msg+"' expected: '"+expected+"'") );
@@ -376,7 +428,8 @@ io.sockets.on('connection', function (socket) {
       return this._name;
     },
     _opponents: [],
-    _opponent: {name: null, keepalive: null, ip: null},
+    _requests: [],
+    _opponent: {clientname: null, keepalive: 10, ip: null, wanttoplay: false},
     _target: BROADCAST,
     _interval: null,
     _stage: 0,
@@ -391,114 +444,8 @@ io.sockets.on('connection', function (socket) {
     socket.emit("update opponent list", data);
   });
 
-  connectFour.on("play request", function( data ) {
-    console.log("PLAAAAAAY REQUEST RECIEVED")
-    socket.emit("play request", data);
+  connectFour.on("play request accepted", function( data ) {
+    console.log("PLAAAAAAY REQUEST accepted")
+    socket.emit("play request accepted", data);
   });
-
-  /*connectFour.on('end', function() {
-    process.exit();
-  });
-
-  connectFour.on('error', function() {
-    console.log('on-error');
-  });
-
-  connectFour.on('idle.start', function() {
-    console.log("try 'go' the next time...");
-  });*/
-  //console.log(connectFour);
-  //console.log(connectFour.trigger);
-
-  //connectFour.trigger("start");
-  //tim.trigger("start");
-  //tim.trigger("asdfg");
-
-  //setTimeout(function() {tim.trigger("testing"); setTimeout(function() {tim.trigger("x")}, 5000);}, 6000);
-
-  //debug(console.log("EEEND"));
-
-
- /*   running: {
-
-      // animate clock every tick
-      /*tick: function(cb) {
-        console.log("tick");
-        var clock = [ '|', '/', '-', '\\' ];
-        process.stdout.write('(' + clock[tim._i] + ")");
-        for (var i = 0; i < 50; ++i) process.stdout.write(' ');
-        process.stdout.write('\r');
-        tim._i = (tim._i + 1) % clock.length;
-        cb();
-      },
-
-      // cannot exit from this state
-      exit: 'error',
-
-      // when 'no' or 'stop' or 'x' are pushed, move to 'stopping' and start
-      // a 2sec timeout that emits 'elapsed' when elapsed (surpise!)
-      '(no|stop|x)': function(cb) {
-        console.log("no, stop, x pushed");
-        process.stdout.write('stopping...\n');
-        connectFour.state = 'stopping';
-        connectFour.timeout('stopped', 5000);
-
-        cb();
-      },
-      'testing': function(cb) {
-        console.log("switching to testing");
-        connectFour.state= "testing";
-        cb();
-      },
-      $exit: function(cb) {
-        // take some time before changing state.
-        console.log('our running times are over.. give me 2 more seconds.');
-        setTimeout(cb, 2000);
-      },
-
-    },
-
-    testing: {
-      $enter: function(cb) {
-        console.log("entering testing stage");
-        cb();
-      },
-      "(a|b)": function(cb) {
-        console.log("a oder b");
-      },
-      ".*": "error",
-      $exit: function(cb) {
-        console.log("testing exit");
-      },
-    },
-    stopping: {
-
-      $enter: function(cb) {
-        console.log('entering stopping state');
-        cb();
-      },
-
-      // called when the stopping timer elapses. clears the 
-      // interval and changes state to 'idle'
-      stopped: function(cb) {
-        process.stdout.write('\nall done.\n');
-        clearInterval(connectFour._interval);
-        tim.state = 'idle';
-        cb();
-      },
-
-      // a tick during stop operation, show dots
-      tick: function(cb) {
-        process.stdout.write(".");
-        cb();
-      },
-
-      exit: 'error',
-
-    },
-
-*/
-
-
-
 });
