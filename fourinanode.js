@@ -129,7 +129,6 @@ io.sockets.on('connection', function (socket) {
                 var opponent;
                 opponent.ip = rinfo.address;
                 opponent.name = message.clientname;
-                opponent.keepalive = TIMEOUT;
                 connectFour._opponent = opponent;
                 connectFour.state = "incomingRequest";
               }
@@ -174,13 +173,14 @@ io.sockets.on('connection', function (socket) {
     incomingRequest: {
       $enter: function(cb) {
         connectFour.qemit("incoming request", connectFour._opponent);
+        opponent.keepalive = TIMEOUT;
         connectFour._opponent.starts = true;
         connectFour._interval = connectFour.interval("keepalive", FREQUENCY);
         cb();
       },
       keepalive: function(cb) {
         connectFour._opponent.keepalive--;
-        if (connectFour._opponent.keepalive <=0)
+        if (connectFour._opponent.keepalive <0)
           connectFour.state = "broadcast"; 
         cb();
       },
@@ -188,7 +188,53 @@ io.sockets.on('connection', function (socket) {
         connectFour.state = "acceptIncomingRequest";
         cb();
       },
+      "decline incoming request": function(cb) {
+        connectFour.state = "broadcast";
+        cb();
+      },
       $exit: function(cb) {
+        clearInterval(connectFour._interval);
+        cb();
+      }
+    },
+    outgoingRequest: {
+      $enter: function (cb) {
+        connectFour._opponent.keepalive = GLOBAL.TIMEOUT;
+        connectFour._interval = connectFour.interval("keepalive", FREQUENCY);
+
+        connectFour._server.on("message", function(msg, rinfo) {
+          if (connectFour._localIP(rinfo.address) == true)
+            return true;
+          
+          var message;
+          try {
+            message =JSON.parse( msg );
+            if ( message.version == GLOBAL.VERSION
+                 && rinfo.address == connectFour._opponent.ip
+                 && message.stage == 2
+                 && message.clientname == undefined) {
+              connectFour._turn.turn = 0;
+              connectFour._turn.column = message.column;
+              connectFour.state = "outTurn";
+            }
+          } catch (err) {
+            console.log("EEEEEEEEROR parsing JSON - message dropped");
+            //that.trigger("error");
+            cb();
+          }
+        });
+        cb();
+      },
+      keepalive: function() {
+        connectFour._opponent.keepalive--;
+        if (connectFour._opponent.keepalive <0)
+          connectFour.state="broadcast";
+
+        var msg = messages.request;
+        msg.clientname = connectFour.getPlayerName();
+        connectFour._send(msg, connectFour._opponent.ip);
+      },
+      $exit: function (cb) {
         clearInterval(connectFour._interval);
         cb();
       }
@@ -238,7 +284,9 @@ io.sockets.on('connection', function (socket) {
     },
     inTurn: {
       $enter: function(cb) {
+        connectFour._opponent.turnalive = GLOBAL.TURNTIMEOUT;
         connectFour.qemit("opponents turn", connectFour._turn);
+        connectFour._interval("keepalive", FREQUENCY);
 
         connectFour._server.on("message", function(msg, rinfo) {
           if (connectFour._localIP(rinfo.address) == true)
@@ -270,37 +318,100 @@ io.sockets.on('connection', function (socket) {
 
         cb();
       },
+      "gameOver": function(cb) {
+        connectFour.state="gameEnd";
+        cb();
+      },
+      keepalive: function(cb) {
+        connectFour._opponent.keepalive--;
+        if (connectFour._opponent.keepalive <0)
+          connectFour.state = "broadcast";
+        connectFour._opponent.turnalive--;
+        if (connectFour._opponent.turnalive <0)
+          connectFour.state = "error";
+        cb();
+      },
       "turn": function(cb, turn) {
+        connectFour._turn = turn;
         connectFour.state = "outTurn";
         cb();
       },
       $exit: function(cb) {
+        clearInterval(connectFour._interval);
         cb();
       }
     },
     outTurn: {
       $enter: function(cb) {
-        cb();
-      },
-      $exit: function(cb) {
-        cb();
-      }
-    },
-    startGame:{
-      $enter: function(cb) {
-        cb();
-      },
-      $exit: function(cb) {
-        cb();
-      }
-    },
-    outgoingRequest: {
-      $enter: function (cb) {
+        connectFour.opponent.turnalive = GLOBAL.TURNTIMEOUT;
+        connectFour.opponent.keepalive = GLOBAL.TIMEOUT;
+        connectFour._interval = connectFour.interval("sendTurn", GLOBAL.FREQUENCY);
+
+        connectFour._server.on("message", function(msg, rinfo) {
+          if (connectFour._localIP(rinfo.address) == true)
+            return true;
+          
+          var message;
+          try {
+            message =JSON.parse( msg );
+            if ( message.version == GLOBAL.VERSION
+                 && rinfo.address == connectFour._opponent.ip
+                 && message.stage == 99
+                 && message.clienttype == connectFour._opponent.clienttype) {
+                connectFour.state = "error";
+            }
+            if ( message.version == GLOBAL.VERSION
+                 && rinfo.address == connectFour._opponent.ip
+                 && message.stage == 4
+                 && message.clienttype == connectFour._opponent.clienttype) {
+              if ( message.turn == connectFour._turn.turn) {
+                connectFour._opponent.keepalive = TIMEOUT
+              } else if (message.turn == (connectFour._turn.turn +1 )) {
+                connectFour._turn.turn = message.turn;
+                connectFour._turn.column = message.column;
+                connectFour.state = "inTurn";
+              } else {
+                connectFour.state = "error";
+              }
+            }
+          } catch (err) {
+            console.log("EEEEEEEEROR parsing JSON - message dropped");
+            //that.trigger("error");
+            cb();
+          }
+        });
 
         cb();
       },
-      $exit: function (cb) {
+      "gameOver": function(cb) {
+        connectFour.state="gameEnd";
         cb();
+      },
+      sendTurn: function(cb) {
+        var msg = messages.turn;
+        msg.turn = connectFour._turn.turn;
+        msg.column = connectFour._turn.column;
+        connectFour._send(msg, connectFour._opponent.ip);
+        connectFour._opponent.turnalive--;
+        if (connectFour._opponent.turnalive <0)
+          connectFour.state = "error";
+        connectFour._opponent.keepalive--;
+        if (connectFour._opponent.keepalive <0)
+          connectFour.state = "broadcast";
+
+        cb();
+      },
+      $exit: function(cb) {
+        clearInterval(connectFour._interval);
+        cb();
+      }
+    },
+    gameEnd: {
+      $enter: function(cb) {
+
+      },
+      $exit: function(cb) {
+
       }
     },
     errorHandler: {
@@ -489,8 +600,4 @@ io.sockets.on('connection', function (socket) {
     debg( function(){ console.log("-- got column: "+data)});
     socket.emit("set column callback");
   });
-
-
-
-
 });
