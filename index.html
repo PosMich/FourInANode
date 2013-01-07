@@ -7,6 +7,35 @@
 <link href='http://fonts.googleapis.com/css?family=Amatic+SC:400,700' rel='stylesheet' type='text/css'>
 <script src="script/jquery.js"></script>
 <script src="script/gamelogic.js"></script>
+<script src="http://localhost:8080/socket.io/socket.io.js"></script>
+<script type="css">
+  :invalid {
+    border: 2px solid #ff0000;
+  }
+  </script>
+<script>
+        var socket = io.connect('http://localhost:8080');
+
+        socket.on("update player name successful", function( data ) {
+            console.log("new name successfully set to: "+data);
+        });
+
+        socket.on("update player name failed", function() { alert("player name update failed");});
+
+        socket.on("game start successful", function() {console.log("game started")});
+
+        socket.emit("get player name");
+
+        socket.on("player name", function (data) {
+          console.log("player name: " + data);
+        })
+
+        
+
+        socket.on("play request accepted", function( data ) {
+          
+        });
+  </script>
 <title>Home</title>
 </head>
 
@@ -37,12 +66,8 @@
     <div class="main mainStart">
         <p class="info"></p>        
         
-        <ul>
-            <li><a href="#" class="button toPlayground"><span>Play</span></a><div class="player">Lisa Lederer</div></li>
-            <li><a href="#" class="button toPlayground"><span>Play</span></a><div class="player">Michael 444</div></li>
-            <li><a href="#" class="button toPlayground"><span>Play</span></a><div class="player">Sebi</div></li>
-            <li><a href="#" class="button toPlayground"><span>Play</span></a><div class="player">AliTheBeast</div></li>
-            <li><a href="#" class="button toPlayground"><span>Play</span></a><div class="player">TheBestGeorge666</div></li>
+        <ul id="playerList">
+            
         </ul><br/>
 
 
@@ -54,63 +79,70 @@
         <div id="playground">
         
             <div class="arrows_div">
-                <canvas id="canvas0_1" width="50" height="50" onclick="canvasClicked(0, 1)" class="arrow"></canvas>
-                <canvas id="canvas0_2" width="50" height="50" onclick="canvasClicked(0, 2)" class="arrow"></canvas>
-                <canvas id="canvas0_3" width="50" height="50" onclick="canvasClicked(0, 3)" class="arrow"></canvas>
-                <canvas id="canvas0_4" width="50" height="50" onclick="canvasClicked(0, 4)" class="arrow"></canvas>
-                <canvas id="canvas0_5" width="50" height="50" onclick="canvasClicked(0, 5)" class="arrow"></canvas>
-                <canvas id="canvas0_6" width="50" height="50" onclick="canvasClicked(0, 6)" class="arrow"></canvas>
-                <canvas id="canvas0_7" width="50" height="50" onclick="canvasClicked(0, 7)" class="arrow"></canvas> <br/>
+                <canvas id="canvas0_1_1" width="50" height="50" data-row="0" data-col="1" class="arrow"></canvas>
+                <canvas id="canvas0_1_0" width="50" height="50" data-row="0" data-col="1" class="arrow inactive"></canvas>
+                <canvas id="canvas0_2_1" width="50" height="50" data-row="0" data-col="2" class="arrow"></canvas>
+                <canvas id="canvas0_2_0" width="50" height="50" data-row="0" data-col="2" class="arrow inactive"></canvas>
+                <canvas id="canvas0_3_1" width="50" height="50" data-row="0" data-col="3" class="arrow"></canvas>
+                <canvas id="canvas0_3_0" width="50" height="50" data-row="0" data-col="3" class="arrow inactive"></canvas>
+                <canvas id="canvas0_4_1" width="50" height="50" data-row="0" data-col="4" class="arrow"></canvas>
+                <canvas id="canvas0_4_0" width="50" height="50" data-row="0" data-col="4" class="arrow inactive"></canvas>
+                <canvas id="canvas0_5_1" width="50" height="50" data-row="0" data-col="5" class="arrow"></canvas>
+                <canvas id="canvas0_5_0" width="50" height="50" data-row="0" data-col="5" class="arrow inactive"></canvas>
+                <canvas id="canvas0_6_1" width="50" height="50" data-row="0" data-col="6" class="arrow"></canvas>
+                <canvas id="canvas0_6_0" width="50" height="50" data-row="0" data-col="6" class="arrow inactive"></canvas>
+                <canvas id="canvas0_7_1" width="50" height="50" data-row="0" data-col="7" class="arrow"></canvas> 
+                <canvas id="canvas0_7_0" width="50" height="50" data-row="0" data-col="7" class="arrow inactive"></canvas><br/>
             </div>
             
             <div class="canvas_div">
-                <canvas id="canvas1_1" width="50" height="50" onclick="canvasClicked(1, 1)"></canvas>
-                <canvas id="canvas1_2" width="50" height="50" onclick="canvasClicked(1, 2)"></canvas>
-                <canvas id="canvas1_3" width="50" height="50" onclick="canvasClicked(1, 3)"></canvas>
-                <canvas id="canvas1_4" width="50" height="50" onclick="canvasClicked(1, 4)"></canvas>
-                <canvas id="canvas1_5" width="50" height="50" onclick="canvasClicked(1, 5)"></canvas>
-                <canvas id="canvas1_6" width="50" height="50" onclick="canvasClicked(1, 6)"></canvas>
-                <canvas id="canvas1_7" width="50" height="50" onclick="canvasClicked(1, 7)"></canvas> <br/>
+                <canvas id="canvas1_1" width="50" height="50" data-row="1" data-col="1"></canvas>
+                <canvas id="canvas1_2" width="50" height="50" data-row="1" data-col="2"></canvas>
+                <canvas id="canvas1_3" width="50" height="50" data-row="1" data-col="3"></canvas>
+                <canvas id="canvas1_4" width="50" height="50" data-row="1" data-col="4"></canvas>
+                <canvas id="canvas1_5" width="50" height="50" data-row="1" data-col="5"></canvas>
+                <canvas id="canvas1_6" width="50" height="50" data-row="1" data-col="6"></canvas>
+                <canvas id="canvas1_7" width="50" height="50" data-row="1" data-col="7"></canvas> <br/>
                 
-                <canvas id="canvas2_1" width="50" height="50" onclick="canvasClicked(2, 1)"></canvas>
-                <canvas id="canvas2_2" width="50" height="50" onclick="canvasClicked(2, 2)"></canvas>
-                <canvas id="canvas2_3" width="50" height="50" onclick="canvasClicked(2, 3)"></canvas>
-                <canvas id="canvas2_4" width="50" height="50" onclick="canvasClicked(2, 4)"></canvas>
-                <canvas id="canvas2_5" width="50" height="50" onclick="canvasClicked(2, 5)"></canvas>
-                <canvas id="canvas2_6" width="50" height="50" onclick="canvasClicked(2, 6)"></canvas>
-                <canvas id="canvas2_7" width="50" height="50" onclick="canvasClicked(2, 7)"></canvas> <br/>
+                <canvas id="canvas2_1" width="50" height="50" data-row="2" data-col="1"></canvas>
+                <canvas id="canvas2_2" width="50" height="50" data-row="2" data-col="2"></canvas>
+                <canvas id="canvas2_3" width="50" height="50" data-row="2" data-col="3"></canvas>
+                <canvas id="canvas2_4" width="50" height="50" data-row="2" data-col="4"></canvas>
+                <canvas id="canvas2_5" width="50" height="50" data-row="2" data-col="5"></canvas>
+                <canvas id="canvas2_6" width="50" height="50" data-row="2" data-col="6"></canvas>
+                <canvas id="canvas2_7" width="50" height="50" data-row="2" data-col="7"></canvas> <br/>
                 
-                <canvas id="canvas3_1" width="50" height="50" onclick="canvasClicked(3, 1)"></canvas>
-                <canvas id="canvas3_2" width="50" height="50" onclick="canvasClicked(3, 2)"></canvas>
-                <canvas id="canvas3_3" width="50" height="50" onclick="canvasClicked(3, 3)"></canvas>
-                <canvas id="canvas3_4" width="50" height="50" onclick="canvasClicked(3, 4)"></canvas>
-                <canvas id="canvas3_5" width="50" height="50" onclick="canvasClicked(3, 5)"></canvas>
-                <canvas id="canvas3_6" width="50" height="50" onclick="canvasClicked(3, 6)"></canvas>
-                <canvas id="canvas3_7" width="50" height="50" onclick="canvasClicked(3, 7)"></canvas> <br/>
+                <canvas id="canvas3_1" width="50" height="50" data-row="3" data-col="1"></canvas>
+                <canvas id="canvas3_2" width="50" height="50" data-row="3" data-col="2"></canvas>
+                <canvas id="canvas3_3" width="50" height="50" data-row="3" data-col="3"></canvas>
+                <canvas id="canvas3_4" width="50" height="50" data-row="3" data-col="4"></canvas>
+                <canvas id="canvas3_5" width="50" height="50" data-row="3" data-col="5"></canvas>
+                <canvas id="canvas3_6" width="50" height="50" data-row="3" data-col="6"></canvas>
+                <canvas id="canvas3_7" width="50" height="50" data-row="3" data-col="7"></canvas> <br/>
                 
-                <canvas id="canvas4_1" width="50" height="50" onclick="canvasClicked(4, 1)"></canvas>
-                <canvas id="canvas4_2" width="50" height="50" onclick="canvasClicked(4, 2)"></canvas>
-                <canvas id="canvas4_3" width="50" height="50" onclick="canvasClicked(4, 3)"></canvas>
-                <canvas id="canvas4_4" width="50" height="50" onclick="canvasClicked(4, 4)"></canvas>
-                <canvas id="canvas4_5" width="50" height="50" onclick="canvasClicked(4, 5)"></canvas>
-                <canvas id="canvas4_6" width="50" height="50" onclick="canvasClicked(4, 6)"></canvas>
-                <canvas id="canvas4_7" width="50" height="50" onclick="canvasClicked(4, 7)"></canvas> <br/>
+                <canvas id="canvas4_1" width="50" height="50" data-row="4" data-col="1"></canvas>
+                <canvas id="canvas4_2" width="50" height="50" data-row="4" data-col="2"></canvas>
+                <canvas id="canvas4_3" width="50" height="50" data-row="4" data-col="3"></canvas>
+                <canvas id="canvas4_4" width="50" height="50" data-row="4" data-col="4"></canvas>
+                <canvas id="canvas4_5" width="50" height="50" data-row="4" data-col="5"></canvas>
+                <canvas id="canvas4_6" width="50" height="50" data-row="4" data-col="6"></canvas>
+                <canvas id="canvas4_7" width="50" height="50" data-row="4" data-col="7"></canvas> <br/>
                 
-                <canvas id="canvas5_1" width="50" height="50" onclick="canvasClicked(5, 1)"></canvas>
-                <canvas id="canvas5_2" width="50" height="50" onclick="canvasClicked(5, 2)"></canvas>
-                <canvas id="canvas5_3" width="50" height="50" onclick="canvasClicked(5, 3)"></canvas>
-                <canvas id="canvas5_4" width="50" height="50" onclick="canvasClicked(5, 4)"></canvas>
-                <canvas id="canvas5_5" width="50" height="50" onclick="canvasClicked(5, 5)"></canvas>
-                <canvas id="canvas5_6" width="50" height="50" onclick="canvasClicked(5, 6)"></canvas>
-                <canvas id="canvas5_7" width="50" height="50" onclick="canvasClicked(5, 7)"></canvas> <br/>
+                <canvas id="canvas5_1" width="50" height="50" data-row="5" data-col="1"></canvas>
+                <canvas id="canvas5_2" width="50" height="50" data-row="5" data-col="2"></canvas>
+                <canvas id="canvas5_3" width="50" height="50" data-row="5" data-col="3"></canvas>
+                <canvas id="canvas5_4" width="50" height="50" data-row="5" data-col="4"></canvas>
+                <canvas id="canvas5_5" width="50" height="50" data-row="5" data-col="5"></canvas>
+                <canvas id="canvas5_6" width="50" height="50" data-row="5" data-col="6"></canvas>
+                <canvas id="canvas5_7" width="50" height="50" data-row="5" data-col="7"></canvas> <br/>
                 
-                <canvas id="canvas6_1" width="50" height="50" onclick="canvasClicked(6, 1)"></canvas>
-                <canvas id="canvas6_2" width="50" height="50" onclick="canvasClicked(6, 2)"></canvas>
-                <canvas id="canvas6_3" width="50" height="50" onclick="canvasClicked(6, 3)"></canvas>
-                <canvas id="canvas6_4" width="50" height="50" onclick="canvasClicked(6, 4)"></canvas>
-                <canvas id="canvas6_5" width="50" height="50" onclick="canvasClicked(6, 5)"></canvas>
-                <canvas id="canvas6_6" width="50" height="50" onclick="canvasClicked(6, 6)"></canvas>
-                <canvas id="canvas6_7" width="50" height="50" onclick="canvasClicked(6, 7)"></canvas> <br/>    
+                <canvas id="canvas6_1" width="50" height="50" data-row="6" data-col="1"></canvas>
+                <canvas id="canvas6_2" width="50" height="50" data-row="6" data-col="2"></canvas>
+                <canvas id="canvas6_3" width="50" height="50" data-row="6" data-col="3"></canvas>
+                <canvas id="canvas6_4" width="50" height="50" data-row="6" data-col="4"></canvas>
+                <canvas id="canvas6_5" width="50" height="50" data-row="6" data-col="5"></canvas>
+                <canvas id="canvas6_6" width="50" height="50" data-row="6" data-col="6"></canvas>
+                <canvas id="canvas6_7" width="50" height="50" data-row="6" data-col="7"></canvas> <br/>
             </div>
 
             <div id="players">
@@ -200,3 +232,15 @@ $(document).ready(function(){
 </script>
 </html>
 -->
+    
+<!-- body>
+  <p><a href="#" id="startfsm">Start state machine</a></p>
+  <p>
+    <input type="text" id="player_name" placeholder="Mein Name">
+    <a href="#" id="player">Name &auml;ndern</a>
+  </p>
+  <p><a href="#" id="start">Start searching</a></p>
+  <div id="found"></div>
+</body>
+
+</html -->
