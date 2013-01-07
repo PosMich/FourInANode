@@ -75,7 +75,7 @@ $(document).ready(function(){
     $("#startfsm").click( function(e) {
         e.preventDefault();
         console.log("trying to start state machine");
-        socket.emit("start game with", "Player 1");
+        socket.emit("fsm");
     })
 });
 </script>
