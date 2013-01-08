@@ -28,12 +28,10 @@ $(document).ready(function() {
 	cross.src = 'img/x.png';
 
 	$(".play").on("click", function() {
-	    hideAll();
 	    $(".mainLogOn").css("display", "block");
 	});
 
 	$(".about").on("click", function() {
-	    hideAll();
 	    $(".mainAbout").css("display", "block");
 	});
 
@@ -86,7 +84,7 @@ $(document).ready(function() {
 	        	$("p.info").html("Wähle einen Spieler aus, den du in 4-Gewinnt besiegen möchtest!<br/>Du bist angemeldet als <b>" + player_name + "</b>.");
 	        });
 	    } else {
-	    	resetPlayground();
+	    	initFourInANode();
 	    	show(".mainPlayground", ".mainStart", function() {
 	        	$("p.info").html("Wähle einen Spieler aus, den du in 4-Gewinnt besiegen möchtest!<br/>Du bist angemeldet als <b>" + player_name + "</b>.");
 	        	$(".popup").css("display", "none");
@@ -136,22 +134,39 @@ $(document).ready(function() {
 	      	}
 
 	      }
-	      
-	      $(".playwith").each(function() {
+
+	      socket.on("incoming request", function( data ) {
+	      	console.log( data );
+	      	$(".popup").html("<h2>\"" +  $(this).find(".player").text() + '\" würde gerne mit dir spielen.</h2><a href="#" class="button replay_yes" id="logOnPlay"><span>Ja</span></a><a href="#" class="button replay_no" id="logOnPlay"><span>Nein</span></a>');
+            $(".popup").css("display", "block");
+            $(".popup").animate({opacity:1}, 1000);
+	      	
+	      });
+
+	      $("#playerList li").each(function() {
 	          $(this).click( function(e) {
 	            e.preventDefault();
-	            console.log("send game request");
-	            socket.emit("send game request", $(this).parent().parent().find(".clientname").html());
+	            console.log("play with: " + "{clientname: " + $(this).find(".player").text() + ", ip: " + $(this).data("ip") + "}");
+	            socket.emit("play with", {clientname: $(this).find(".player").text(), ip: $(this).data("ip")});
+	            $(".popup").html("<h2>Waiting for \"" +  $(this).find(".player").text() + "\"</h2>");
+	            $(".popup").css("display", "block");
+	            $(".popup").animate({opacity:1}, 1000);
+	            socket.on("play request accepted", function( data ) {
+	            	initFourInANode();
+	            	//popup reseten
+	            	$(".popup").css("display", "none");
+	            	$(".popup").animate({opacity:0}, 500);
+	            	startPlayground( false );
+	            });
 	          });
 	      });
 	    });
 	  
 	    $(".toPlayground").live("click", function() {
-	    	initFourInANode();
 	        opponent_name = $(this).next().text();
 	        console.log("send game request");
 	        socket.emit("send game request", opponent_name);
-	        startPlayground( false );
+	        
 	    });
 	}
 
@@ -164,8 +179,18 @@ $(document).ready(function() {
 	        });
 	    } else {
 	    	show(".popup", ".mainPlayground", function() {})
-	    	resetPlayground();
+	    	initFourInANode();
 	    }
+	}
+
+	closeFourInANode = function() {
+		show(".mainPlayground", ".mainClose", function() {
+			$("p.info").html("");
+			$(".popup").css("display", "none");
+			$(".popup").html('<h2>Good Bye ' + player_name + '</h2><p>Bis zum nächsten mal auf<br/> <a href="#" class="popupLink">Four in a Node</a>');
+			$(".popup").css("display", "block");
+			$(".popup").animate({opacity: 1}, 1000);
+		});
 	}
 
 	showError = function( msg ) {
@@ -187,13 +212,6 @@ $(document).ready(function() {
 	   		next();
 	   	});
 	}
-
-	resetPlayground = function() {    	
-		initField();
-		initArrows();
-		bindCanvas();
-	}
-
 
 	drawCircle = function(theCanvas, fillColor, strokeColor, posX, posY, radius) {
 		c = document.getElementById(theCanvas);
@@ -236,14 +254,20 @@ $(document).ready(function() {
 		function checkVertical() {
 			counter = 0;
 			for(var i=1; i<7; i++) {
-				if(content[i+"_"+colNumber] == getPlayer){
+				if(content[i + "_" + colNumber] == getPlayer){
 					counter++;
+					console.log("counter: " + counter);
+					if(counter >= 4) {
+						for(j = i; j > (i-4); j--)
+							$("#canvas" + j + "_" + colNumber).css("background-color", "#6E0101");
+						break;
+					}
 				} else {
 					counter = 0;
 				}
-				Winner(counter);
-				
+				console.log("winning counter:" + counter);
 			}
+			Winner(counter);
 		}
 		
 		function checkHorizontal(row) {
@@ -298,7 +322,7 @@ $(document).ready(function() {
 			}
 
 			for(var i=0; i<6; i++) {
-				console.log(r+"_"+col);
+				
 				if(content[r+"_"+col] == getPlayer){
 					counter++;
 				} else {
@@ -368,8 +392,8 @@ $(document).ready(function() {
 	$("canvas").click(function(e) {
 		e.preventDefault();
 		colNumber = $(this).data("col");
-		//colNumber = $(this).data("col");
-		console.log("klick");
+
+		console.log("turn: " + turn);
 
 		if( enabled ) {
 			if( turn%2==0 ){
@@ -451,43 +475,52 @@ $(document).ready(function() {
 			
 			//Counter for filled Squares; if it is full (42), the game is over by draw
 			if(turn==42){
-				alert("Unentschieden!");
-				location.reload(true);
+				playAgain("");
 			}
 		}
 	});
 	$(".canvas_div").mousedown(function(e){e.preventDefault();});
 
 	playAgain = function( player ){
-		var text = ( player == player_name ) ? "Du hast gewonnen!!" : opponent_name + " hat gewonnen!!";
-		$(".popup").html('<h2>' + text + '</h2><p>Nochmal spielen?</p><p class="options"><a href="#" class="button replay_yes" id="logOnPlay"><span>Ja</span></a><a href="#" class="button replay_no" id="logOnPlay"><span>Nein</span></a></p>');
-		
-		$(".popup").css("display", "block");
-		$(".popup").animate({opacity: 1}, 1000);
 
-		$(".replay_yes").live("click", function() { 
-			$(".popup").animate({opacity: 0}, 400);
-			enabled = true;
-			startPlayground( true );
-		});
-		$(".replay_no").on("click", function() {
-			$(".popup").animate({opacity: 0}, 400);
-			enabled = true;
-			viewPlayers( true );
-		});
+		var text = "";
+		if( player == '' ) 
+			text = "Unentschieden!!";
+		else if ( player == player_name )
+			text = "Du hast gewonnen!!";
+		else
+			text = opponent_name + " hat gewonnen!!";
+
+		setTimeout(function() {
+			$(".popup").html('<h2>' + text + '</h2><p>Nochmal spielen?</p><p class="options"><a href="#" class="button replay_yes" id="logOnPlay"><span>Ja</span></a><a href="#" class="button replay_no" id="logOnPlay"><span>Nein</span></a></p>');
+		
+			$(".popup").css("display", "block");
+			$(".popup").animate({opacity: 1}, 1000);
+
+			$(".replay_yes").live("click", function() { 
+				$(".popup").animate({opacity: 0}, 400);
+				enabled = true;
+				viewPlayers( true );
+			});
+			$(".replay_no").on("click", function() {
+				$(".popup").animate({opacity: 0}, 400);
+				enabled = true;
+				closeFourInANode();
+			});
+		}, 1000);
 	}
 
 	initFourInANode = function() {
 		content = new Array();
 		field_occupied = new Array();
 		freeField = false;
+		turn = 0;
 		$('.player1').css('font-weight','bold');
 		
 		initField();
 		initArrows();
 		bindCanvas();
 
-		
 		//making Coins for player 1 and player 2
 		for(var i=1; i<3; i++) {
 			theCanvas = "player"+i;
@@ -499,3 +532,5 @@ $(document).ready(function() {
 	}
 
 });
+
+// 

@@ -229,7 +229,7 @@ canvas {
 	position:absolute;
 }
 
-.mainLogOn, .mainStart, .mainPlayground, .mainAbout {
+.mainLogOn, .mainStart, .mainPlayground, .mainAbout, .mainClose {
 	display: none; opacity: 0;
 }
 
@@ -315,4 +315,16 @@ li {
 
 #playerList li {
 	opacity: 0;
+}
+
+.popupLink {
+	font-family: 'Amatic SC', Tahoma;
+	font-size: 2.0em;
+	color: #666;
+	font-weight:; bolder;
+	text-decoration: none;
+}
+
+.popupLink:hover {
+	text-decoration: underline;
 }
