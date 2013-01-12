@@ -19,7 +19,6 @@ $(document).ready(function() {
 	var arrow2;
 	var cross;
 
-
 	arrow = new Image();
 	arrow2 = new Image();
 	cross = new Image();
@@ -38,7 +37,7 @@ $(document).ready(function() {
 	startGame = function() {
 	    $(".mainLogOn").css("display", "block");
 	    $(".mainLogOn").animate({opacity: 1}, 1000);
-	    $("p.info").html("Wähle zuerst deinen Namen.");
+	    $("p.info").html("Um \"Vier Gewinnt\" spielen zu können, wähle zuerst deinen Namen.");
 
 	    $("#logOnPlay").on("click", function(e) {
 	    	e.preventDefault();
@@ -62,13 +61,13 @@ $(document).ready(function() {
 	            // call second stage
 	            player_name = $_logOn.val()
 	    		console.log("trying to set new player name " + player_name);
-	    		socket.emit("set player name", player_name);
-	    		socket.on("set player name successful", function() {
+	    		/* socket.emit("set player name", player_name);
+	    		socket.on("set player name successful", function() { */
 	    			viewPlayers( false );
-	    		});
+	    		/* }); 
 	    		socket.on("set player name failed", function() {
 	    			showError( "Interner Fehler" );
-	    		});
+	    		});*/
 	            
 	        } else {
 	            showError( msg );
@@ -76,7 +75,7 @@ $(document).ready(function() {
 	    }); 
 	}
 
-	var oldData = [];
+	// var oldData = [];
 
 	viewPlayers = function( replay ) {
 		if( !replay ) {
@@ -91,11 +90,11 @@ $(document).ready(function() {
 	        });
 	    }
 
-	    console.log("trying to start game");
+	    /* console.log("trying to start game");
 
 	    socket.emit("start searching opponents");
 
-	    socket.on("update opponent list", function( data ) {
+	    socket.on("update opponent list", function( data ) { 
 
 	      newData = $.extend(true, [], data);
 
@@ -141,9 +140,9 @@ $(document).ready(function() {
             $(".popup").css("display", "block");
             $(".popup").animate({opacity:1}, 1000);
 	      	
-	      });
+	      }); */
 
-	      $("#playerList li").each(function() {
+	      /* $("#playerList li").each(function() {
 	          $(this).click( function(e) {
 	            e.preventDefault();
 	            console.log("play with: " + "{clientname: " + $(this).find(".player").text() + ", ip: " + $(this).data("ip") + "}");
@@ -159,13 +158,15 @@ $(document).ready(function() {
 	            	startPlayground( false );
 	            });
 	          });
-	      });
-	    });
+	      }
+	    });*/
 	  
 	    $(".toPlayground").live("click", function() {
 	        opponent_name = $(this).next().text();
 	        console.log("send game request");
-	        socket.emit("send game request", opponent_name);
+	        // socket.emit("send game request", opponent_name);
+	        initFourInANode();
+	        startPlayground( false );
 	        
 	    });
 	}
@@ -214,8 +215,8 @@ $(document).ready(function() {
 	}
 
 	drawCircle = function(theCanvas, fillColor, strokeColor, posX, posY, radius) {
-		c = document.getElementById(theCanvas);
-		context = c.getContext("2d");
+		// console.log(theCanvas);
+		context = theCanvas.getContext("2d");
 		
 		context.beginPath();
 		context.arc(posX, posY, radius, 0, 2 * Math.PI, true);
@@ -227,15 +228,8 @@ $(document).ready(function() {
 		context.closePath();
 	}
 
-	resetCanvas = function( theCanvas ) {
-		c = document.getElementById(theCanvas);
-		c.width = c.width;
-	}
-
-
 	//Functions to get the Winner
 	checkWinner = function(row, colNumber) {
-		console.log("checkWinner");
 		var counter;
 		var getPlayer = content[row+"_"+colNumber];
 		
@@ -256,16 +250,15 @@ $(document).ready(function() {
 			for(var i=1; i<7; i++) {
 				if(content[i + "_" + colNumber] == getPlayer){
 					counter++;
-					console.log("counter: " + counter);
 					if(counter >= 4) {
 						for(j = i; j > (i-4); j--)
 							$("#canvas" + j + "_" + colNumber).css("background-color", "#6E0101");
+						unBindField( true );
 						break;
 					}
 				} else {
 					counter = 0;
 				}
-				console.log("winning counter:" + counter);
 			}
 			Winner(counter);
 		}
@@ -275,12 +268,17 @@ $(document).ready(function() {
 			for(var i=1; i<8; i++) {
 				if(content[row+"_"+i] == getPlayer){
 					counter++;
+					if( counter >= 4) {
+						for(var j = i; j > (i-4); --j)
+							$("#canvas" + row + "_" + j).css("background-color", "#6E0101");
+						unBindField( true );
+						break;
+					}
 				} else {
 					counter = 0;
 				}
-				Winner(counter);
-				
 			}
+			Winner(counter);
 		}
 		
 		//check for 4 diagonal stones from bottom left to top right
@@ -289,8 +287,7 @@ $(document).ready(function() {
 			col = colNumber;
 			counter = 0;
 			
-			while(col>0 && r<6)
-			{
+			while(col>0 && r<6) {
 				r++;
 				col--;
 			}
@@ -299,14 +296,22 @@ $(document).ready(function() {
 				//console.log(r+"_"+col);
 				if(content[r+"_"+col] == getPlayer){
 					counter++;
+					if( counter >= 4) {
+						for( var j = 0; j < 4; ++j) {
+							$("#canvas" + r + "_" + col).css("background-color", "#6E0101");
+							col--; r++;
+						}
+
+						unBindField( true );
+						break;
+					}
 				} else {
 					counter = 0;
 				}
-				
-				Winner(counter);
 				col++;
 				r--;
 			}
+			Winner(counter);
 		}
 		
 		//check for 4 diagonal stones from bottom right to top left
@@ -315,8 +320,7 @@ $(document).ready(function() {
 			r = row;
 			col = colNumber;
 			
-			while(r>1 && col>1)
-			{
+			while(r>1 && col>1) {
 				r--;
 				col--;
 			}
@@ -325,14 +329,22 @@ $(document).ready(function() {
 				
 				if(content[r+"_"+col] == getPlayer){
 					counter++;
+					if( counter >= 4 ) {
+						for( var j = 0; j < 4; ++j ) {
+							$("#canvas" + r + "_" + col).css("background-color", "#6E0101");
+							col--; r--;
+						}
+
+						unBindField( true );
+						break;
+					}
 				} else {
 					counter = 0;
 				}
-				
-				Winner(counter);
 				r++;
 				col++;
 			}
+			Winner(counter);
 		}
 	}
 
@@ -341,7 +353,7 @@ $(document).ready(function() {
 			for(var j=1; j<8; j++){
 				field_occupied[i + "_" + j] = false;
 				content[i + "_" + j]='';
-				resetCanvas( "canvas"+i+"_"+j );
+				$( "#canvas"+i+"_"+j )[0].width = $( "#canvas"+i+"_"+j )[0].width;
 			}
 			//resetCanvas( "canvas0_"+j );
 		} 
@@ -351,7 +363,6 @@ $(document).ready(function() {
 		for(var i=1; i<8; i++) {
 			theCanvas = "canvas0_" + i + "_1";
 			theCanvasInactive = "canvas0" + "_" + i + "_0";
-			console.log(theCanvas);
 			c = document.getElementById(theCanvas);
 			cInactive = document.getElementById(theCanvasInactive);
 			c.width = c.width;
@@ -365,45 +376,91 @@ $(document).ready(function() {
 
 	bindCanvas = function() {
 		//This handles the mouse-over Effect on arrows and fields (changing colors)
-		$("canvas").hover(function(e) {
+		$("canvas").hover( function(e) {
 			e.preventDefault();
-			var col = $(this).data("col");
-			
-			$("#canvas0_" + col + "_1").css("opacity", 0);
-			$("#canvas0_" + col + "_0").css("opacity", 1);
-
-			//To change the colors of the rows and the arrows by hovering
-			for( var i = 0; i < 7; i++) {
-				$("#canvas" + i + "_" + col).css("background-color", "#ddd");
-				$("#canvas" + i + "_" + col).css("border-color", "#000");
-			}
+			hoverOn( $(this).data("col") );
 		}, function(e) {
 			e.preventDefault();
-			var col = $(this).data("col");
-			$("#canvas0_" + col + "_1").css("opacity", 1);
-			$("#canvas0_" + col + "_0").css("opacity", 0);
-			for( var i = 0; i < 7; i++) {
-				$("#canvas" + i + "_" + col).css("background-color", "#fefefe");
-				$("#canvas" + i + "_" + col).css("border-color", "#c8c8c8");
-			}
+			hoverOut( $(this).data("col") );
 		});
 	}
 
-	$("canvas").click(function(e) {
-		e.preventDefault();
-		colNumber = $(this).data("col");
+	function hoverOn( col ) {
+		$("#canvas0_" + col + "_1").css("opacity", 0);
+		$("#canvas0_" + col + "_0").css("opacity", 1);
 
-		console.log("turn: " + turn);
+		//To change the colors of the rows and the arrows by hovering
+		for( var i = 0; i < 7; i++) {
+			$("#canvas" + i + "_" + col).css("background-color", "#ddd");
+			$("#canvas" + i + "_" + col).css("border-color", "#000");
+		}
+		//new canvas
+		for( var i = 7; i > 0; i--) {
+			if( field_occupied[i + "_" + col] == false ) {
+				theCanvas = $("#canvas" + i + "_" + col);
+				break;
+			}
+		}
+
+		theCanvas.after('<canvas id="hoverCanvas" width="50" height="50"></canvas>');
+		var hoverCanvas = $("#hoverCanvas");
+		hoverCanvas.css({marginLeft: -50, opacity: 0.5});
+		if( turn%2 == 0 ) {
+        	fillColor = "#616161" ; strokeColor = "#4b4b4b";
+        } else {
+        	fillColor = "#ffa200" ; strokeColor = "#ea6900";
+        }
+		drawCircle(hoverCanvas[0], fillColor, strokeColor, 25, 25, 20);
+
+	}
+
+	function hoverOut( col ) {
+		$("#canvas0_" + col + "_1").css("opacity", 1);
+		$("#canvas0_" + col + "_0").css("opacity", 0);
+		for( var i = 0; i < 7; i++) {
+			$("#canvas" + i + "_" + col).css("background-color", "#fefefe");
+			$("#canvas" + i + "_" + col).css("border-color", "#c8c8c8");
+		}
+		$("#hoverCanvas").remove();
+	}
+
+	$(".arrows_div canvas, .canvas_div canvas").click(function(e) {
+		e.preventDefault();
+		$("#hoverCanvas").remove();
+		colNumber = $(this).data("col");
+		setPoint( colNumber );
+	});
+
+	function setPoint( colNumber ) {
+        
+        if( typeof(bounceInterval) == "undefined" )
+        	bounceInterval = null;
+		clearInterval( bounceInterval );
 
 		if( enabled ) {
 			if( turn%2==0 ){
 				var i = 6;
 				while( freeField==false && i>0 ) {
 					if( (field_occupied[i + "_" + colNumber] )==false ){
-						theCanvas = "canvas" + i + "_" + colNumber;
-						drawCircle(theCanvas, '#616161', '#4b4b4b', 25, 25, 20);
+
+						var theCanvas = $("#canvas" + i + "_" + colNumber);	
+						// add new canvas
+						theCanvas.after('<canvas id="canvasTmpCopy" width="50" height="50"></canvas>');
+						var tmpCanvas = $("#canvasTmpCopy");
+						tmpCanvas.css({top: 180, marginLeft: -50});
+						drawCircle(tmpCanvas[0], '#616161', '#4b4b4b', 25, 25, 20);
+						
+						tmpCanvas.animate({top: theCanvas.position().top}, 1000, "easeOutBounce", function() {
+							drawCircle(theCanvas[0], '#616161', '#4b4b4b', 25, 25, 20);
+							tmpCanvas.remove();
+						});
 						
 						$('.player2').css('font-weight','bold');
+
+						bounceInterval = setInterval( function() {
+        					$("#player2").effect("bounce", { times:3 }, 600);
+        				}, 1500);
+
 						$('.player1').css('font-weight','normal');
 						
 						//To see which field is already occupied with a stone
@@ -425,23 +482,33 @@ $(document).ready(function() {
 					c = document.getElementById(theCanvas);
 					context = c.getContext("2d");
 					context.drawImage(cross, 10, 10);
-					$("#canvas0_" + colNumber + "_1").unbind('mouseenter').unbind('mouseleave');
-					$("#canvas0_" + colNumber + "_0").unbind('mouseenter').unbind('mouseleave');
-					for( var i = 1; i < 7; i++ ) {
-						$("#canvas" + i + "_" + colNumber).unbind('mouseenter').unbind('mouseleave');
-						$("#canvas" + i + "_" + colNumber).css("background-color", "#fefefe");
-						$("#canvas" + i + "_" + colNumber).css("border-color", "#c8c8c8");
-					}
+					unBindControlls( colNumber );
+					unBindElements( colNumber, false );
 				}
 			} else if(turn%2!=0) {
 				i=6;
 				while( freeField==false && i>0 ){
 					if( (field_occupied[i + "_" + colNumber] )==false ){
-						theCanvas = "canvas" + i + "_" + colNumber;
-						drawCircle(theCanvas, '#ffa200', '#ea6900', 25, 25, 20);
+
+						var theCanvas = $("#canvas" + i + "_" + colNumber);	
+						// add new canvas
+						theCanvas.after('<canvas id="canvasTmpCopy" width="50" height="50"></canvas>');
+						var tmpCanvas = $("#canvasTmpCopy");
+						tmpCanvas.css({top: 180, marginLeft: -50});
+						drawCircle(tmpCanvas[0], '#ffa200', '#ea6900', 25, 25, 20);
+						tmpCanvas.animate({top: theCanvas.position().top}, 1000, "easeOutBounce", function() {
+							drawCircle(theCanvas[0], '#ffa200', '#ea6900', 25, 25, 20);
+							tmpCanvas.remove();
+						});
 						
 						$('.player1').css('font-weight','bold');
 						$('.player2').css('font-weight','normal');
+
+						clearInterval( bounceInterval );
+
+						bounceInterval = setInterval( function() {
+        					$("#player1").effect("bounce", { times:3 }, 600);
+        				}, 1500);
 						
 						content[i + "_" + colNumber] = opponent_name;
 						field_occupied[i + "_" + colNumber]=true;
@@ -461,13 +528,8 @@ $(document).ready(function() {
 					c = document.getElementById(theCanvas);
 					context = c.getContext("2d");
 					context.drawImage(cross, 10, 10);
-					$("#canvas0_" + colNumber + "_1").unbind('mouseenter').unbind('mouseleave');
-					$("#canvas0_" + colNumber + "_0").unbind('mouseenter').unbind('mouseleave');
-					for( var i = 1; i < 7; i++ ) {
-						$("#canvas" + i + "_" + colNumber).unbind('mouseenter').unbind('mouseleave');
-						$("#canvas" + i + "_" + colNumber).css("background-color", "#fefefe");
-						$("#canvas" + i + "_" + colNumber).css("border-color", "#c8c8c8");
-					}
+					unBindControlls( colNumber );
+					unBindElements( colNumber, false );
 				}
 			}
 			
@@ -477,8 +539,19 @@ $(document).ready(function() {
 			if(turn==42){
 				playAgain("");
 			}
+			if(turn >= 1) {
+				playerId_disable = ( turn%2 ) ? "1" : "2";
+				playerId_enable = ( turn%2 ) ? "2" : "1";
+			}
+
+
+
+			$("#player" + playerId_disable).draggable( 'disable' );
+			draggableTurn( turn );			
+			$("#player" + playerId_enable).draggable( 'enable' );
 		}
-	});
+	}
+
 	$(".canvas_div").mousedown(function(e){e.preventDefault();});
 
 	playAgain = function( player ){
@@ -520,17 +593,89 @@ $(document).ready(function() {
 		initField();
 		initArrows();
 		bindCanvas();
+		draggableTurn(0);
 
 		//making Coins for player 1 and player 2
 		for(var i=1; i<3; i++) {
-			theCanvas = "player"+i;
-			if(theCanvas=="player1")
-				drawCircle(theCanvas, '#616161', '#4b4b4b', 15, 15, 10);
-			else
-				drawCircle(theCanvas, '#ffa200', '#ea6900', 15, 15, 10);
+			theCanvas = $("#player"+i);
+			if( theCanvas.attr("id")=="player1" ) {
+				drawCircle(theCanvas[0], '#616161', '#4b4b4b', 15, 15, 10);
+				// drawCircle(theCanvas + 'copy', '#616161', '#4b4b4b', 15, 15, 10);
+			} else {
+				drawCircle(theCanvas[0], '#ffa200', '#ea6900', 15, 15, 10);
+				// drawCircle(theCanvas + 'copy', '#ffa200', '#ea6900', 15, 15, 10);
+			}
 		}
 	}
 
-});
+	unBindElements = function( col, win ) {
+		for( var i = 1; i < 7; i++ ) {
+			$("#canvas" + i + "_" + col).unbind('mouseenter').unbind('mouseleave');
+			if(!win) {
+				$("#canvas" + i + "_" + col).css("background-color", "#fefefe");
+				$("#canvas" + i + "_" + col).css("border-color", "#c8c8c8");
+			}
+		}
+	}
 
-// 
+	unBindField = function ( win ) {
+		for( var i = 0; i < 7; ++i) {
+			unBindControlls(i);
+			unBindElements(i, win);
+		}
+	}
+
+	unBindControlls = function( col ) {
+		$("#canvas0_" + col + "_1").unbind('mouseenter').unbind('mouseleave');
+		$("#canvas0_" + col + "_0").unbind('mouseenter').unbind('mouseleave');
+	}
+
+	function draggableTurn( turn ) {
+		playerId = ( turn%2 ) ? "2" : "1";
+	    $("#player" + playerId).draggable({
+	        revert: "invalid",
+	        cursorAt: { left: 25, top: 25 },
+	        start: function( e ) {
+	        	theCanvasCopy = $("#" + $(this).attr("id") + "copy" );
+	        	if( $(this).attr("id") == "player1" ) {
+	            	fillColor = "#616161" ; strokeColor = "#4b4b4b";
+	            } else {
+	            	fillColor = "#ffa200" ; strokeColor = "#ea6900";            	
+	            }
+
+	            theCanvasCopy.css("display", "block");
+	            drawCircle(theCanvasCopy[0], fillColor, strokeColor, 25, 25, 20 );
+
+	            var i = 0;
+	            var interval = setInterval( function() {
+	            	i += 1;
+	            	if( i >= 30 )
+	            		clearInterval( interval )
+	            	theCanvasCopy.width(20+i).height(20+i);
+	            }, 10)
+	            // return $( "#" + theCanvas );
+	        },
+	        helper: function( e ) {
+	            return $( "#" + $(this).attr("id") + "copy" ).css("opacity", 0.8);
+	        },
+	        stop: function () {
+	    		$(this).after('<canvas id="' + $(this).attr("id") + "copy" + '" width="50" height="50" style="opacity:0;"></canvas>');
+	        }
+	    });
+	}
+
+	 $( ".arrows_div canvas, .canvas_div canvas" ).droppable({
+      drop: function( event ) {
+      	setPoint( $(this).data("col") );
+      }, over: function () {
+      	if( !field_occupied["1_" + $(this).data("col")] )
+      		hoverOn( $(this).data("col") );
+      }, out: function () {
+      	if( !field_occupied["1_" + $(this).data("col")] )
+      		hoverOut( $(this).data("col") );
+      }
+    });
+
+	 $("div, document, canvas").click(function(e){e.preventDefault();});
+
+});

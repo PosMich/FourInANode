@@ -217,8 +217,8 @@ canvas {
 }
 
 #players canvas {
-	background-color: #FFF;
-	border:0px solid black;
+	background: transparent;
+	/* border:0px solid black; */
 	height:30px;
 	width:30px;
 }
@@ -226,7 +226,6 @@ canvas {
 #players span {
 	margin:8px 0px 20px 0px;
 	padding-left:10px;
-	position:absolute;
 }
 
 .mainLogOn, .mainStart, .mainPlayground, .mainAbout, .mainClose {
@@ -314,7 +313,7 @@ li {
 }
 
 #playerList li {
-	opacity: 0;
+	/* opacity: 0; */
 }
 
 .popupLink {
@@ -327,4 +326,31 @@ li {
 
 .popupLink:hover {
 	text-decoration: underline;
+}
+
+.playerCircles {
+	overflow: hidden;
+}
+
+#player1copy, #player2copy {
+	opacity: 0; display: none;
+}
+
+#players canvas {
+	border: none;
+}
+
+#canvasTmpCopy, #hoverCanvas {
+	position: absolute;
+	background: transparent;
+	border: none;
+}
+
+.player2, .player1 {
+	float: left;
+}
+
+#player2, #player1 {
+	float: left;
+	margin-bottom: 20px;
 }
