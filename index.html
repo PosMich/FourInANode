@@ -14,36 +14,19 @@
         socket.on("update player name successful", function( data ) {
             console.log("new name successfully set to: "+data);
         });
-
-        socket.on("update player name failed", function() { alert("player name update failed");});
-
-        socket.on("game start successful", function() {console.log("game started")});
-
-        socket.emit("get player name");
-
-        socket.on("player name", function (data) {
-          console.log("player name: " + data);
-        })
-
-        socket.on("update opponent list", function( data ) {
-          console.log(data);
-          var html = "<table>";
+        socket.on("update Opponents", function(data) {
+          console.log("OPPONENTS: ");
+          $(".opponents").empty();
           for (var i=0; i<data.length; i++) {
-            html += "<tr><td class=\"clientname\">Clientname: "+data[i].clientname+"</td><td class=\"ip\">IP: "+data[i].ip+"</td><td class=\"keepalive\">Keepalive: "+data[i].keepalive+"</td><td><a href=\"#\" id=\""+i+"\" class=\"playwith\">Play with me!</a></td></tr>";
+            $(".opponents").append("<li>"+data[i].clientname+"@"+data[i].ip+" "+data[i].keepalive+"</li>");
           }
-          $("#found").html(html);
-          $(".playwith").each(function() {
-              $(this).click( function(e) {
-                e.preventDefault();
-                console.log("send game request");
-                socket.emit("send game request", $(this).parent().parent().find(".clientname").html());
-              });
-          });
+          console.log(data);
         });
 
-        socket.on("play request accepted", function( data ) {
-          
-        });
+        socket.on("incoming Request", function(data) {
+          console.log("incoming Request");
+          socket.emit("stop Broadcast");
+        })
   </script>
   <script type="css">
   :invalid {
@@ -52,31 +35,53 @@
   </script>
 </head>
 <body>
-  <p><a href="#" id="startfsm">Start state machine</a></p>
   <p>
-    <input type="text" id="player_name" placeholder="Mein Name">
-    <a href="#" id="player">Name &auml;ndern</a>
+    <input type="text" id="name" placeholder="Mein Name">
+    <button id="setName">Name setzen</button>
+  </p>
+  <p>
+    <input type="text" id="ip" placeholder="IP">
+    <button id="setIP">IP setzen</button>
+  </p>
+  <p>
+    <button id="broadcast">Broadcast starten</button>
+  </p>
+    <ul class="opponents"></ul>
+  <p>
+    <button id="startRequest">Anfrage starten</button>
+  </p>
+  <p>
+    <button id="acceptRequest">Anfrage akzeptieren</button>
   </p>
   <p><a href="#" id="start">Start searching</a></p>
   <div id="found"></div>
 </body>
 <script>
 $(document).ready(function(){
-    $("#player").click( function(e) {
+    $("#setName").click( function(e) {
         e.preventDefault();
-        console.log("trying to set new player name " + $("#player_name").val());
-        socket.emit("set player name", $("#player_name").val() );
+        console.log("try 'set Name'");
+        socket.emit("set Name", $("#name").val());
+        console.log("emit 'set Name'");
     });
-    $("#start").click( function(e) {
+
+    $("#setIP").click( function(e) {
         e.preventDefault();
-        console.log("trying to start game");
-        socket.emit("start searching opponents");
-    })
-    $("#startfsm").click( function(e) {
+        socket.emit("set IP", $("#name").val());
+    });
+
+    $("#broadcast").click( function(e) {
         e.preventDefault();
-        console.log("trying to start state machine");
-        socket.emit("fsm");
-    })
+        socket.emit("find Opponents");
+    });
+
+    $("#startRequest").click( function(e) {
+        e.preventDefault();
+    });
+
+    $("#acceptRequest").click( function(e) {
+        e.preventDefault();
+    });
 });
 </script>
 </html>
