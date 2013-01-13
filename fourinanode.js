@@ -1,17 +1,16 @@
 // create socket.io server on port 8080
 var io = require('socket.io').listen(8080);
-// finite state machine
-var fsmjs = require('fsmjs');
 
-console.log(addresses)
+
 /************************* debug STUFF ****************************/
 GLOBAL.DEBUG = 1;
-GLOBAL.debg = function ( doThis ) {
+GLOBAL.debug = function ( doThis ) {
   if (DEBUG == 1) {
     doThis();
   }
 };
 
+/************************* get local IPs **************************/
 var os = require('os')
 
 var interfaces = os.networkInterfaces();
@@ -27,7 +26,10 @@ for (k in interfaces) {
 
 GLOBAL.MYIPS = addresses;
 
+
 /*********************** GAME OPTIONS *****************************/
+
+GLOBAL.VERSION    = 2;
 // working port
 GLOBAL.PORT        = 32442;
 // Broadcast address
@@ -36,586 +38,389 @@ GLOBAL.BROADCAST   = "255.255.255.255";
 GLOBAL.FREQUENCY   = 2000;
 GLOBAL.TIMEOUT     = 10;
 GLOBAL.TURNTIMEOUT = 30;
+GLOBAL.NAME        = "Tha Playa";
+GLOBAL.CLIENTTYPE = 1;
 
 /*********************** JSON MESSAGE VARS ************************/
-// current version
-GLOBAL.VERSION    = 2;
-// Clienttype: 0=Game, 1=Web
-GLOBAL.CLIENTTYPE = 1;
 
 // message containers
 GLOBAL.messages = {
-  search:   {version:GLOBAL.VERSION,clienttype:GLOBAL.CLIENTTYPE,stage:1,clientname:null},
-  request:    {version:GLOBAL.VERSION,clienttype:GLOBAL.CLIENTTYPE,stage:2,clientname:null},
-  accepted: {version:GLOBAL.VERSION,clienttype:GLOBAL.CLIENTTYPE,stage:2},
-  ready:    {version:GLOBAL.VERSION,clienttype:GLOBAL.CLIENTTYPE,stage:3},
-  turn:     {version:GLOBAL.VERSION,clienttype:GLOBAL.CLIENTTYPE,stage:4,column:null, turn:null},
-  end:      {version:GLOBAL.VERSION,clienttype:GLOBAL.CLIENTTYPE,stage:5},
-  abort:    {version:GLOBAL.VERSION,clienttype:GLOBAL.CLIENTTYPE,stage:99}
+  search:   function() { return {version:GLOBAL.VERSION,clienttype:GLOBAL.CLIENTTYPE,stage:1,clientname:GLOBAL.NAME}},
+  request:  function() { return {version:GLOBAL.VERSION,clienttype:GLOBAL.CLIENTTYPE,stage:2,clientname:GLOBLA.NAME}},
+  accepted: function() { return {version:GLOBAL.VERSION,clienttype:GLOBAL.CLIENTTYPE,stage:2}},
+  ready:    function() { return {version:GLOBAL.VERSION,clienttype:GLOBAL.CLIENTTYPE,stage:3}},
+  turn:     function(clmn, trn) { return {version:GLOBAL.VERSION,clienttype:GLOBAL.CLIENTTYPE,stage:4,column:clmn, turn:trn}},
+  end:      function() { return {version:GLOBAL.VERSION,clienttype:GLOBAL.CLIENTTYPE,stage:5}},
+  abort:    function() { return {version:GLOBAL.VERSION,clienttype:GLOBAL.CLIENTTYPE,stage:99}}
 }
 
-// bind whole thing to every incoming connection
+
+// bind whole thing to every incoming socket connection
 io.sockets.on('connection', function (socket) {
+  console.log("SOCKET CONNECTED");
+  var dgram      = require("dgram");
+  var server     = dgram.createSocket("udp4");
+  server.bind(PORT);
 
-  debg( function(){ console.log("-- USER CONNECTED") });
 
-  /************** STATE MACHINE GOES HERE *************************/
-  var connectFour = fsmjs({
-    start: {
-      "start": function(cb) {
-        /*********************** UDP VARS *********************************/
-        // create a UDP socket and bind to specific Port
-        connectFour._dgram      = require("dgram");
-        connectFour._server     = connectFour._dgram.createSocket("udp4");
-        connectFour._server.bind(PORT);
+  var TURN = -1;
+  var OPPONENTS = [];
+  var OPPONENT = {clientname: "asdf", ip: "123.123.123.123", keepalive: GLOBAL.TIMEOUT, starts: false, turntimeout: GLOBAL.TURNTIMEOUT};
+/*
+socket zeugs:
 
-        //debg( function(){connectFour._server.setMulticastLoopback(true)});
+Stage 1 "Spieler finden"
+  html: name setzen           socket.on("set name")
+  html: broadcast starten     socket.on("start broadcast")
+  server: Liste updaten       socket.emit("update opponents", opponents)
 
-        debg( function(){ console.log("/\\/\\ START STAGE MACHINE")});
-        debg( function(){ console.log("/\\/\\ STAGE 0: 'start'")});
-        connectFour._enableBroadcast();
-        cb();
-      },
-      "set player name": function( cb, name ) {
-        debg( function(){ console.log("/\\/\\ STAGE 1: 'set player name' from '"+connectFour._name+"' to '"+name+"'")});
-        connectFour._name = name;
-        cb();
-        return true;
-      },
-      "search opponents": function( cb ) {
-        debg( function(){ console.log("/\\/\\ STAGE 1: 'search opponents'")});
-        connectFour.state = "broadcast";
-        cb();
-      },
-      // strings are target states (and emitted events)
-      exit: function(cb) {
-        console.log("exit pushed");
-        connectFour.qemit('end');
-        return cb();
-      },
+Stage 2 "incoming request"
+  server: incoming request    socket.emit("incoming request", opponent)
+  html:   annehmen            socket.on("incoming request accept")
+  server: timeout             socket.emit("timeout")
 
-      e: "error",
+Stage 2: "outgoing request"
+  html: outgoing request      socket.on("outgoing request", opponent)
+  server: timeout             socket.emit("timeout")
 
-      // any other event in this state shows this error
-      '.*': "error",
-      /*function(cb, e) {
-        console.log("any other event pushed");
-        console.log('error: i cant understand what you mean by "' + e + '"');
-        cb();
-      },*/
-      $exit: function(cb) {
-        debg( function(){ console.log("/\\/\\ EXIT STAGE 0")});
-        //this._disableBroadcast();
-        cb();
+Stage 3: "Spielbereit"
+  server: spiel starten       socket.emit("play starts")
+  server: timeout             socket.emit("timeout")
+
+Stage 4: "Turn"
+  html: turn                  socket.on("turn")
+  server: turn                socket.emit("turn")
+  server: timeout             socket.emit("timeout")
+
+Stage 5: "Ende"
+  html: ende                  socket.on("end")
+  server: ende                socket.emit("end")
+
+Stage 99: "Error"             socket.emit("error")
+                              socket.on("error")
+
+*/
+
+/****************************************************/
+/********************* set Name *********************/
+  socket.on("set Name", function(data) {
+    GLOBAL.NAME = data;
+    console.log("new Name: "+GLOBAL.NAME);
+  });
+
+
+/****************************************************/
+/**************** start  Broadcast ******************/
+/*
+Stage 1 "Spieler finden"
+  html: broadcast starten     socket.on("start broadcast")
+  server: Liste updaten       socket.emit("update opponents", opponents)
+*/
+  socket.on("start broadcast", function() {
+
+    server.setBroadcast(true);
+
+    interval = setInterval(function() {
+      for(var i=0; i<OPPONENTS.length; i++) {
+        OPPONENTS[i].keepalive -= GLOBAL.FREQUENCY/1000;
+        if (OPPONENTS[i].keepalive<1)
+          OPPONENTS.splice(i,1);
       }
-    },
-    broadcast: {
-      $enter: function( cb ) {
-        connectFour._opponent.keepalive = GLOBAL.TIMEOUT;
-        connectFour._server.setBroadcast(true);
-        connectFour._broadcastInterval = connectFour.interval("broadcast", FREQUENCY);
 
-        connectFour._server.on("message", function(msg, rinfo){
-          if (connectFour._localIP(rinfo.address) == true)
-            return true;
-          
-          var message;
-          try {
-            message =JSON.parse( msg );
-            console.log("**********MESSAGE***********");
-            console.log(message);
+      socket.emit("update opponent list", opponents);
+
+      var msg = new Buffer(JSON.stringify(GLOBAL.messages.search()));
+      server.send(msg, 0, msg.length, GLOBAL.PORT, GLOBAL.BROADCAST);
+    }, FREQUENCY);
+
+    server.on("message", function(msg, rinfo){
+      if (isLocalhost(rinfo.address) == true)
+        return;
+
+      try {
+        var msg = JSON.parse(msg);
+        if (validateMessage( msg, GLOBAL.messages.search() ) == true) {
+          console.log("VALID search msg");
+          console.log(msg);
+
+          var found = false;
+          for (var i=0; i<OPPONENTS.length; i++) { 
+            if (OPPONENTS[i].ip = rinfo.address) {
+              found = true 
+              OPPONENTS[i].keepalive=GLOBAL.TIMEOUT;
+            }
+          }
+
+          if ( found == false ) {
+            OPPONENTS.push({clientname:msg.clientname,ip:rinfo.address,keepalive:GLOBAL.TIMEOUT});
+          }
+          socket.emit("update Opponents", OPPONENTS);
+        } else if (validateMessage( msg, GLOBAL.messages.request() ) == true) {
+          console.log("VALID incoming request msg");
+          clearInterval(interval);
+          server.setBroadcast(false);
+          incomingRequestHandler(msg, rinfo.address);
+        }
+        
+      } catch(err) {
+        console.log("err");
+      }
+    });
+
+  
+  });
+
+/*
+Stage 2 "incoming request"
+  server: incoming request    socket.emit("incoming request", opponent)
+  html:   annehmen            socket.on("incoming request accept")
+  html:   ablehnen            socket.on("incoming request decline") <-- automatisch wieder zum broadcast wechseln
+  server: timeout             socket.emit("timeout")
+*/
+  function incomingRequestHandler(msg, ip) {
+    OPPONENT.clientname = msg.clientname;
+    OPPONENT.ip = ip;
+    OPPONENT.starts = true;
+    socket.emit("incoming request", {clientname:OPPONENT.clientname,ip:OPPONENT.ip});
+
+
+    var timeoutInterval = setInterval(function() {
+      OPPONENT.keepalive -= GLOBAL.FREQUENCY/1000;
+      if ( OPPONENT.keepalive <= 0 ) {
+        socket.emit("timeout");
+        clearInterval(timeoutInterval);
+      }
+    }, GLOBAL.FREQUENCY);
+
+    server.on("message", function(msg, rinfo) {
+      if (isLocalhost(rinfo.address) == true)
+        return;
+
+      try {
+        var msg = JSON.parse(msg);
+        if (validateMessage( msg, GLOBAL.messages.request) ) {
+          if (msg.clientname == OPPONENT.clientname)
+            OPPONENT.keepalive = GLOBAL.TIMEOUT;
+        }
+        
+      } catch(err) {
+        console.log("err");
+      }
+    })
+  }
+
+  socket.on("incoming request accept", function() {
+    var timeoutInterval = setInterval(function(){
+      OPPONENT.keepalive -= GLOBAL.FREQUENCY/1000;
+      if (OPPONENT.keepalive <=0) {
+        socket.emit("timeout");
+        clearInterval(timeoutInterval);
+      }
+
+      var msg = new Buffer(JSON.stringify(GLOBAL.messages.accepted()));
+      server.send(msg, 0, msg.length, GLOBAL.PORT, OPPONENT.ip);
+    }, GLOBAL.FREQUENCY);
+
+    server.on("message", function(msg, rinfo) {
+      if (isLocalhost(rinfo.address) == true)
+        return;
+
+      try {
+        var msg = JSON.parse(msg);
+        if (validateMessage( msg, GLOBAL.messages.request()) == true ) {
+          if (msg.clientname == OPPONENT.clientname)
+            OPPONENT.keepalive = GLOBAL.TIMEOUT;
+        } else if (validateMessage(msg, GLOBAL.messages.ready()) == true) {
+          clearInterval(timeoutInterval);
+          socket.emit("incoming request verified");
+        }
+        
+      } catch(err) {
+        console.log("err");
+      }
+    });
+  });
+  
+  socket.on("send request", function(opponent) {
+    OPPONENT = {clientname: opponent.clientname, ip: opponent.ip, keepalive: GLOBAL.TIMEOUT, starts: false, turntimeout: GLOBAL.TURNTIMEOUT};
+    var timeoutInterval = setInverval( function() {
+      OPPONENT.keepalive -= GLOBAL.FREQUENCY/1000;
+      if (OPPONENT.keepalive <= 0) {
+        socket.emit("timeout");
+        clearInterval(timeoutInterval);
+      }
+    }, GLOBAL.FREQUENCY);
+
+    server.on("message", function(msg, rinfo) {
+      if (isLocalhost(rinfo.address) == true)
+        return;
+
+      try {
+        var msg = JSON.parse(msg);
+        // if i begin
+        if (validateMessage( msg, GLOBAL.messages.accepted()) == true) {
+          // ready verfified, start game
+          if (msg.clientname == OPPONENT.clientname) {
+            clearInterval(timeoutInterval);
+            TURN = 0;
+            socket.emit("request accepted");
+          }
+        }
+      } catch (err) {
+        console.log("err: "+err);
+      }
+    });
+  });
+
+  socket.on("ready for game", function() {
+    var timeoutInterval = setInterval(function() {
+      OPPONENT.keepalive -= GLOBAL.FREQUENCY/1000;
+      if(OPPONENT.keepalive <= 0) {
+        socket.emit("timeout");
+        clearInterval(timeoutInterval);
+      }
+
+      var msg = new Buffer(JSON.stringify(GLOBAL.messages.ready()));
+      server.send(msg, 0, msg.length, GLOBAL.PORT, OPPONENT.ip);
+    }, GLOBAL.FREQUENCY);
+
+    server.on("message", function(msg, rinfo) {
+      if (isLocalhost(rinfo.address) == true)
+        return;
+
+      try {
+        var msg = JSON.parse(msg);
+        // if i begin
+        if (validateMessage( msg, GLOBAL.messages.ready()) == true && OPPONENT.starts == false ) {
+          // ready verfified, start game
+          clearInterval(timeoutInterval);
+          TURN = 0;
+          socket.emit("start game");
+        } else if (validateMessage( msg, GLOBAL.messages.turn(0,0)) == true && OPPONENT.starts == true) {
+          //first turn
+          if (msg.turn == 0) {
+            clearInterval(timeoutInterval);
+            TURN = 0;
+            turnHandler(msg.column, msg.turn, true);
+          }
+        }
+      } catch (err) {
+        console.log("err: "+err);
+      }
+    });
+  });
+
+  socket.on("turn", function(data) {
+    turnHandler(data.column, data.turn, false);
+  });
+
+  function turnHandler( clmn, trn, incoming ) {
+    var timeoutInterval = setInterval(function() {
+      OPPONENT.keepalive  -= GLOBAL.FREQUENCY/1000;
+      if ( OPPONENT.keepalive <= 0 ) {
+        clearInterval( timeoutInterval );
+        clearInterval( turnTimeoutInterval );
+        socket.emit("timeout");
+      }
+    }, GLOBAL.FREQUENCY);
+
+    var turnTimeoutInterval = setInterval(function() {
+      OPPONENT.turntimeout -= GLOBAL.FREQUENCY/1000;
+      if ( OPPONENT.turntimeout <= 0 ) {
+        clearInterval(timeoutInterval);
+        clearInterval(turnTimeoutInterval);
+        socket.emit("turn timeout");
+      }
+
+      if (incoming == false) {
+        var msg = new Buffer(JSON.stringify(GLOBAL.messages.turn(clmn, trn)));
+        server.send(msg, 0, msg.length, GLOBAL.PORT, OPPONENT.ip);
+      }
+    }, GLOBAL.FREQUENCY);
+
+    if (incoming == true) {
+      socket.emit("turn", {column: clmn, turn: trn});
+    }
+
+    socket.on("message", function() {
+      if (isLocalhost(rinfo.address) == true)
+        return;
+
+      try {
+        var msg = JSON.parse(msg);
+
+        if (validateMessage( msg, GLOBAL.messages.turn(0,0)) == true) {
+          if ( msg.clientname == OPPONENT.clientname ) {
             
-            if ( message.stage == 1 ) {
-              connectFour._handleIncomingBroadcast(message, rinfo);
-            } else if ( message.stage == 2 ) {
-              if (connectFour._validateMessage(message, messages.request)) {
-                var opponent;
-                opponent.ip = rinfo.address;
-                opponent.name = message.clientname;
-                connectFour._opponent = opponent;
-                connectFour.state = "incomingRequest";
-              }
+            if (incoming == true && msg.turn == TURN) {
+              OPPONENT.keepalive = GLOBAL.TIMEOUT;
+            } else if ( incoming == false && msg.turn == TURN++ ) {
+              clearInterval(timeoutInterval);
+              clearInterval(turnTimeoutInterval);
+              // next turn
+              TURN++;
+              turnHandler( clmn, trn, true);
             }
-
-          } catch (err) {
-            console.log("EEEEEEEEROR parsing JSON - message dropped");
-            //that.trigger("error");
-            cb();
           }
-        });
-
-        cb();
-      },
-      "play with": function(cb, opponent) {
-        connectFour._opponent = opponent;
-        connectFour.state = "outgoingRequest";
-        cb();
-      },
-      broadcast: function(cb) {
-        for (var i = 0; i < connectFour._opponents.length; i++) {
-          if (connectFour._opponents[i].keepalive < 1) {
-            connectFour._opponents.splice(i,1);
-          } else {
-            connectFour._opponents[i].keepalive--;
-          }
-        }
-
-        var search = messages.search;
-        search.clientname = connectFour.getPlayerName();
-
-        connectFour._send(search, BROADCAST);
-        connectFour.qemit( "update opponents list", connectFour._opponents);
-        cb();
-      },
-      $exit: function( cb ) {
-        connectFour._server.setBroadcast(false);
-        clearInterval( connectFour._broadcastInterval );
-        cb();
+        } 
+      } catch (err) {
+        console.log("err: "+err);
       }
-    },
-    incomingRequest: {
-      $enter: function(cb) {
-        connectFour.qemit("incoming request", connectFour._opponent);
-        opponent.keepalive = TIMEOUT;
-        connectFour._opponent.starts = true;
-        connectFour._interval = connectFour.interval("keepalive", FREQUENCY);
-        cb();
-      },
-      keepalive: function(cb) {
-        connectFour._opponent.keepalive--;
-        if (connectFour._opponent.keepalive <0)
-          connectFour.state = "broadcast"; 
-        cb();
-      },
-      "accept incoming request": function(cb) {
-        connectFour.state = "acceptIncomingRequest";
-        cb();
-      },
-      "decline incoming request": function(cb) {
-        connectFour.state = "broadcast";
-        cb();
-      },
-      $exit: function(cb) {
-        clearInterval(connectFour._interval);
-        cb();
+    });
+  }
+
+  socket.on("end of game", function() {
+    var timeoutInterval = setInterval(function() {
+      OPPONENT.keepalive -= GLOBAL.FREQUENCY/1000;
+      if (OPPONENT.keepalive <= 0 ) {
+        clearInterval(timeoutInterval);
+        socket.emit("timeout");
       }
-    },
-    outgoingRequest: {
-      $enter: function (cb) {
-        connectFour._opponent.keepalive = GLOBAL.TIMEOUT;
-        connectFour._interval = connectFour.interval("keepalive", FREQUENCY);
 
-        connectFour._server.on("message", function(msg, rinfo) {
-          if (connectFour._localIP(rinfo.address) == true)
-            return true;
-          
-          var message;
-          try {
-            message =JSON.parse( msg );
-            if ( message.version == GLOBAL.VERSION
-                 && rinfo.address == connectFour._opponent.ip
-                 && message.stage == 2
-                 && message.clientname == undefined) {
-              connectFour._turn.turn = 0;
-              connectFour._turn.column = message.column;
-              connectFour.state = "outTurn";
-              connectFour.qemit("");
-            }
-          } catch (err) {
-            console.log("EEEEEEEEROR parsing JSON - message dropped");
-            //that.trigger("error");
-            cb();
-          }
-        });
-        cb();
-      },
-      keepalive: function() {
-        connectFour._opponent.keepalive--;
-        if (connectFour._opponent.keepalive <0)
-          connectFour.state="broadcast";
+      var msg = new Buffer(JSON.stringify(GLOBAL.messages.end()));
+      server.send(msg, 0, msg.length, GLOBAL.PORT, OPPONENT.ip);
+    }, GLOBAL.FREQUENCY);
 
-        var msg = {};
-        msg.version = 2;
-        msg.clienttype = 1;
-        msg.stage = 2;
-        msg.clientname = connectFour.getPlayerName();
-        connectFour._send(msg, connectFour._opponent.ip);
-      },
-      $exit: function (cb) {
-        clearInterval(connectFour._interval);
-        cb();
-      }
-    },
-    acceptIncomingRequest: {
-      $enter: function (cb) {
-        connectFour._opponent.keepalive = TIMEOUT;
-        connectFour._interval = connectFour.interval("sendready", FREQUENCY);
-
-        connectFour._server.on("message", function(msg, rinfo) {
-          if (connectFour._localIP(rinfo.address) == true)
-            return true;
-          
-          var message;
-          try {
-            message =JSON.parse( msg );
-            if ( message.version == GLOBAL.VERSION
-                 && rinfo.address == connectFour._opponent.ip
-                 && message.stage == 4
-                 && message.turn == 0
-                 && message.clienttype == connectFour._opponent.clienttype) {
-              connectFour._turn.turn = 0;
-              connectFour._turn.column = message.column;
-              connectFour.state = "inTurn";
-            }
-          } catch (err) {
-            console.log("EEEEEEEEROR parsing JSON - message dropped");
-            //that.trigger("error");
-            cb();
-          }
-        });
-
-        cb();
-      },
-      sendready: function(cb) {
-        connectFour._opponent.keepalive--;
-        if (connectFour._opponent.keepalive <=0)
-          connectFour.state = "broadcast";
-
-        connectFour._send(messages.ready, connectFour._opponent.ip);
-        cb();
-      },
-      $exit: function(cb) {
-        clearInterval(connectFour._interval);
-        cb();
-      }
-    },
-    inTurn: {
-      $enter: function(cb) {
-        connectFour._opponent.turnalive = GLOBAL.TURNTIMEOUT;
-        connectFour.qemit("opponents turn", connectFour._turn);
-        connectFour._interval("keepalive", FREQUENCY);
-
-        connectFour._server.on("message", function(msg, rinfo) {
-          if (connectFour._localIP(rinfo.address) == true)
-            return true;
-          
-          var message;
-          try {
-            message =JSON.parse( msg );
-            if ( message.version == GLOBAL.VERSION
-                 && rinfo.address == connectFour._opponent.ip
-                 && message.stage == 99
-                 && message.clienttype == connectFour._opponent.clienttype) {
-                connectFour.state = "error";
-            }
-            if ( message.version == GLOBAL.VERSION
-                 && rinfo.address == connectFour._opponent.ip
-                 && message.stage == 4
-                 && message.turn == connectFour._turn.turn
-                 && message.column == connectFour._turn.column
-                 && message.clienttype == connectFour._opponent.clienttype) {
-              connectFour._opponent.keepalive = TIMEOUT
-            }
-          } catch (err) {
-            console.log("EEEEEEEEROR parsing JSON - message dropped");
-            //that.trigger("error");
-            cb();
-          }
-        });
-
-        cb();
-      },
-      "gameOver": function(cb) {
-        connectFour.state="gameEnd";
-        cb();
-      },
-      keepalive: function(cb) {
-        connectFour._opponent.keepalive--;
-        if (connectFour._opponent.keepalive <0)
-          connectFour.state = "broadcast";
-        connectFour._opponent.turnalive--;
-        if (connectFour._opponent.turnalive <0)
-          connectFour.state = "error";
-        cb();
-      },
-      "turn": function(cb, turn) {
-        connectFour._turn = turn;
-        connectFour.state = "outTurn";
-        cb();
-      },
-      $exit: function(cb) {
-        clearInterval(connectFour._interval);
-        cb();
-      }
-    },
-    outTurn: {
-      $enter: function(cb) {
-        connectFour.opponent.turnalive = GLOBAL.TURNTIMEOUT;
-        connectFour.opponent.keepalive = GLOBAL.TIMEOUT;
-        connectFour._interval = connectFour.interval("sendTurn", GLOBAL.FREQUENCY);
-
-        connectFour._server.on("message", function(msg, rinfo) {
-          if (connectFour._localIP(rinfo.address) == true)
-            return true;
-          
-          var message;
-          try {
-            message =JSON.parse( msg );
-            if ( message.version == GLOBAL.VERSION
-                 && rinfo.address == connectFour._opponent.ip
-                 && message.stage == 99
-                 && message.clienttype == connectFour._opponent.clienttype) {
-                connectFour.state = "error";
-            }
-            if ( message.version == GLOBAL.VERSION
-                 && rinfo.address == connectFour._opponent.ip
-                 && message.stage == 4
-                 && message.clienttype == connectFour._opponent.clienttype) {
-              if ( message.turn == connectFour._turn.turn) {
-                connectFour._opponent.keepalive = TIMEOUT
-              } else if (message.turn == (connectFour._turn.turn +1 )) {
-                connectFour._turn.turn = message.turn;
-                connectFour._turn.column = message.column;
-                connectFour.state = "inTurn";
-              } else {
-                connectFour.state = "error";
-              }
-            }
-          } catch (err) {
-            console.log("EEEEEEEEROR parsing JSON - message dropped");
-            //that.trigger("error");
-            cb();
-          }
-        });
-
-        cb();
-      },
-      "gameOver": function(cb) {
-        connectFour.state="gameEnd";
-        cb();
-      },
-      sendTurn: function(cb) {
-        var msg = messages.turn;
-        msg.turn = connectFour._turn.turn;
-        msg.column = connectFour._turn.column;
-        connectFour._send(msg, connectFour._opponent.ip);
-        connectFour._opponent.turnalive--;
-        if (connectFour._opponent.turnalive <0)
-          connectFour.state = "error";
-        connectFour._opponent.keepalive--;
-        if (connectFour._opponent.keepalive <0)
-          connectFour.state = "broadcast";
-
-        cb();
-      },
-      $exit: function(cb) {
-        clearInterval(connectFour._interval);
-        cb();
-      }
-    },
-    gameEnd: {
-      $enter: function(cb) {
-
-      },
-      $exit: function(cb) {
-
-      }
-    },
-    errorHandler: {
-      $enter: function(cb) {
-        debg( function(){ console.log("/\\/\\ ENTER ERROR STAGE")});
-        connectFour._endTransmission();
-        cb();
-      },
-      test: function(cb) {
-        console.log("asdfasdf");
-      },
-      $end: function(cb) {
-        debg( function(){ console.log("/\\/\\ EXIT ERROR STAGE")});
-        cb();
-      },
-    },
-    error: function(cb, state) {
-      debg( function(){ console.log("/\\/\\ ERROR IN STATE: "+state)});
-      console.log('An error occured in state', state);
-      //connectFour.state = state;
-      //connectFour._endTransmission();
-    },
-
-    _send: function ( message, target) {
-      debg( function(){ console.log("/\\/\\ HELPER: try to send message") });
-
-      var msg = new Buffer(JSON.stringify(message));
-
-      connectFour._server.send( msg, 0, msg.length, PORT, target, function( err, bytes ) {
-        if (err) throw err;
-        debg( function(){console.log("/\\/\\        msg " + message + " sent to " + target + ":" + PORT)});
-      });
-    },
-
-    _enableBroadcast: function () {
-      debg( function(){ console.log("/\\/\\ HELPER: enable broadcast") });
-      connectFour._server.setBroadcast(true);
-    },
-
-    _disableBroadcast: function() {
-      debg( function(){ console.log("/\\/\\ HELPER: disable broadcast") });
-      connectFour._server.setBroadcast(false);
-    },
-    _endBroadcast: function() {
-      debg( function(){ console.log("/\\/\\ HELPER: clear interval") });
-      connectFour._disableBroadcast();
-      clearInterval( this._interval );
-    },
-    _validateMessage: function ( msg, expected ) {
-      debg( function(){ console.log("/\\/\\ HELPER: validate message") });
-      debg( function(){ console.log("/\\/\\         msg '"+msg+"' expected: '"+expected+"'") });
-      // length must be equal
-      if (msg.length != expected.length)
-        return false;
-
-      if (msg.version != GLOBAL.VERSION)
-        return false;
-      for (var key in expected) {
-        // if key doesn't exist
-        if(typeof(msg[key]) === undefined)
-          return false;
-
-        if ( typeof(msg[key]) != typeof(expected[key]) ) {
-          if (typeof(expected[key]) != "string")
-            return false;
-        }
-        return true;
-      }
-    },
-    _handleIncomingBroadcast: function(message, rinfo) {
-      if ( connectFour._validateMessage(message, messages.search) == true ) {
-        var found = false;
-        for (var i=0; i < connectFour._opponents.length; i++) {
-          if ( connectFour._opponents[i].ip == rinfo.address ) {
-            connectFour._opponents[i].keepalive = GLOBAL.TIMEOUT;
-            connectFour._opponents[i].clientname = message.clientname;
-            found = true;
+    server.on("message", function(msg, rinfo) {
+      try {
+        var msg = JSON.parse(msg);
+        if (validateMessage(msg, GLOBAL.messages.end())) {
+          if (rinfo.address == OPPONENTS) {
+            clearInterval(timeoutInterval);
+            socket.emit("end of game");
           }
         }
-        if ( found == false )
-          connectFour._opponents.push({clientname: message.clientname, ip: rinfo.address, keepalive: GLOBAL.TIMEOUT});
+      } catch (err) {
+        console.log("err: "+err);
       }
-    },
-    _localIP: function(ip) {
-      var self = false;
-      for (var i=0; i<GLOBAL.MYIPS.length; i++) {
-        if (ip == GLOBAL.MYIPS[i])
-          self = true;
-      }
-      if (self == true)
-        return true;
+    });
+  });
+
+  function validateMessage( msg, expected ) {
+    // length must be equal
+    if (msg.length != expected.length)
       return false;
-    },
-    getPlayerName: function() {
-      debg( function(){ console.log("/\\/\\ HELPER: get player name") });
-      return this._name;
-    },
-    _opponents: [],
-    _requests: [],
-    _gameRequestsOut: [],
-    _gameRequestsIn: [],
-    _acceptOut: [],
-    _acceptIn: [],
-    _turn: {turn:false,column:false},
-    _opponent: {clientname: null, 
-                keepalive: GLOBAL.TIMEOUT, 
-                ip: null, 
-                starts: false, 
-                turnalive: GLOBAL.TURNTIMEOUT},
-    _target: BROADCAST,
-    _interval: null,
-    _timeoutInterval: null,
-    _broadcastInterval: null,
-    _errorInterval: null,
-    _stage: 0,
-    _name: "Tha Playa",
-    _msg: null,
-    _server: null,
-    _dgram: null,
-    //_timer: null, // timer object to allow clearing the interval
-    //_i: 0, // animated clock
-  });
-  
-  connectFour.trigger("start");
 
-  connectFour.on("update opponents list", function( data ) {
-    console.log("OOOOOH-ponent List UUUUUUUUPDATE!");
-    socket.emit("update opponent list", data);
-  });
+    if (msg.version != GLOBAL.VERSION)
+      return false;
+    for (var key in expected) {
+      // if key doesn't exist
+      if(typeof(msg[key]) === undefined)
+        return false;
 
-  connectFour.on("play request accepted", function( data ) {
-    console.log("PLAAAAAAY REQUEST accepted")
-    socket.emit("play request accepted", data);
-  });
-
-  connectFour.on("incoming request", function(data) {
-    console.log("INCOMING REQUEST");
-    socket.emit("incoming request", data);
-  });
-
-
-  // set player name
-  socket.on('set player name', function( name ) {
-    debg( function(){ console.log("-- new player name: "+name) });
-    if ( connectFour.trigger("set player name", name) == true ) {
-      debg( function(){ console.log("-- set player name successful")});
-      socket.emit('set player name successful', name);
-    } else {
-      debg( function(){ console.log("-- set player name failed")});
-      socket.emit('set player name failed');
+      if ( typeof(msg[key]) != typeof(expected[key]) ) {
+        if (typeof(expected[key]) != "string")
+          return false;
+      }
+      return true;
     }
-  });
+  };
 
-  // get player name
-  socket.on("get player name", function() {
-    debg( function(){ console.log("-- get player name: "+connectFour.getPlayerName())});
-    socket.emit("player name", connectFour.getPlayerName());
-  });
-
-  socket.on("start searching opponents", function() {
-    debg( function(){ console.log("-- start searching opponents") });
-    connectFour.trigger("search opponents");
-  });
-
-  socket.on('play with', function( data ) {
-    // {clientname: name, ip: ip}
-    debg( function(){ console.log("-- Play with: " + data + " on " + data) });
-    connectFour.trigger("play with", data);
-    socket.emit("request sent");
-    //connectFour.trigger("start with", data)
-    //socket.emit("game start failed");
-  });
-
-  socket.on("accept incoming request", function() {
-    console.log("ACCEPT INCOMING REQUEST");
-    connectFour.trigger("accept incoming request");
-  });
-  socket.on("decline incoming request", function() {
-    console.log("DECLINE INCOMING REQUEST");
-    connectFour.trigger("decline incoming request");
-  });
-
-
-  socket.on('disconnect', function()  {
-    debg( function(){ console.log("-- USER DISCONNECTED") });
-    connectFour.trigger("error");
-  });
-
-  socket.on("verify version", function( data ) {
-    socket.emit("got version", VERSION);
-    if ( VERSION == data ) {
-      socket.emit("verified version successfull");
-    } else {
-      socket.emit("verify version failed", { server: VERSION, client: data});
+  function isLocalhost( ip ) {
+    if ( DEBUG ==0 ) {
+      for (var i=0; i<GLOBAL.MYIPS.length; i++)
+        if (ip == GLOBAL.MYIPS[i]) return true;
     }
-    debg( function(){ console.log("-- emit version: "+VERSION) });
-  });
+  };
 
-  
 });

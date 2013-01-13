@@ -433,8 +433,8 @@ $(document).ready(function() {
 
 	function setPoint( colNumber ) {
         
-        if( typeof(bounceInterval) == "undefined" )
-        	bounceInterval = null;
+    if( typeof(bounceInterval) == "undefined" )
+    	bounceInterval = null;
 		clearInterval( bounceInterval );
 
 		if( enabled ) {
