@@ -8,7 +8,31 @@
 <script src="script/jquery.js"></script>
 <script src="script/gamelogic.js"></script>
 <script src="http://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
-<script src="http://localhost:8080/socket.io/socket.io.js"></script>
+<!-- script src="http://localhost:8080/socket.io/socket.io.js"></script>
+<script>
+        var socket = io.connect('http://localhost:8080');
+
+         socket.on("update player name successful", function( data ) {
+            console.log("new name successfully set to: "+data);
+        });
+
+        socket.on("update player name failed", function() { alert("player name update failed");});
+
+        socket.on("game start successful", function() {console.log("game started")});
+
+        socket.emit("get player name");
+
+        socket.on("player name", function (data) {
+          console.log("player name: " + data);
+        })
+
+        
+
+        socket.on("play request accepted", function( data ) {         
+          
+        });
+  </script -->
+  
   
 <title>Home</title>
 </head>
