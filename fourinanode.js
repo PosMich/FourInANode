@@ -46,7 +46,7 @@ GLOBAL.CLIENTTYPE = 1;
 // message containers
 GLOBAL.messages = {
   search:   function() { return {version:GLOBAL.VERSION,clienttype:GLOBAL.CLIENTTYPE,stage:1,clientname:GLOBAL.NAME}},
-  request:  function() { return {version:GLOBAL.VERSION,clienttype:GLOBAL.CLIENTTYPE,stage:2,clientname:GLOBLA.NAME}},
+  request:  function() { return {version:GLOBAL.VERSION,clienttype:GLOBAL.CLIENTTYPE,stage:2,clientname:GLOBAL.NAME}},
   accepted: function() { return {version:GLOBAL.VERSION,clienttype:GLOBAL.CLIENTTYPE,stage:2}},
   ready:    function() { return {version:GLOBAL.VERSION,clienttype:GLOBAL.CLIENTTYPE,stage:3}},
   turn:     function(clmn, trn) { return {version:GLOBAL.VERSION,clienttype:GLOBAL.CLIENTTYPE,stage:4,column:clmn, turn:trn}},
@@ -62,6 +62,7 @@ io.sockets.on('connection', function (socket) {
   var server     = dgram.createSocket("udp4");
   server.bind(PORT);
 
+  var broadcast = false;
 
   var TURN = -1;
   var OPPONENTS = [];
@@ -117,7 +118,10 @@ Stage 1 "Spieler finden"
   server: Liste updaten       socket.emit("update opponents", opponents)
 */
   socket.on("start broadcast", function() {
+    if (broadcast == true)
+      return;
 
+    broadcast = true;
     server.setBroadcast(true);
 
     interval = setInterval(function() {
@@ -127,7 +131,7 @@ Stage 1 "Spieler finden"
           OPPONENTS.splice(i,1);
       }
 
-      socket.emit("update opponent list", opponents);
+      socket.emit("update opponent list", OPPONENTS);
 
       var msg = new Buffer(JSON.stringify(GLOBAL.messages.search()));
       server.send(msg, 0, msg.length, GLOBAL.PORT, GLOBAL.BROADCAST);
@@ -139,23 +143,24 @@ Stage 1 "Spieler finden"
 
       try {
         var msg = JSON.parse(msg);
-        if (validateMessage( msg, GLOBAL.messages.search() ) == true) {
+        if (validateMessage( msg, GLOBAL.messages.search() ) == true && ( msg.stage == 1 || msg.stage == "1") ) {
           console.log("VALID search msg");
           console.log(msg);
 
           var found = false;
           for (var i=0; i<OPPONENTS.length; i++) { 
-            if (OPPONENTS[i].ip = rinfo.address) {
+            if (OPPONENTS[i].ip == rinfo.address) {
               found = true 
               OPPONENTS[i].keepalive=GLOBAL.TIMEOUT;
+              OPPONENTS[i].clientname = msg.clientname;
             }
           }
 
           if ( found == false ) {
             OPPONENTS.push({clientname:msg.clientname,ip:rinfo.address,keepalive:GLOBAL.TIMEOUT});
           }
-          socket.emit("update Opponents", OPPONENTS);
-        } else if (validateMessage( msg, GLOBAL.messages.request() ) == true) {
+          // socket.emit("update Opponents", OPPONENTS);
+        } else if (validateMessage( msg, GLOBAL.messages.request() ) == true && ( msg.stage == 2 || msg.stage == "2") ) {
           console.log("VALID incoming request msg");
           clearInterval(interval);
           server.setBroadcast(false);
@@ -164,6 +169,7 @@ Stage 1 "Spieler finden"
         
       } catch(err) {
         console.log("err");
+        console.log(err);
       }
     });
 
@@ -242,8 +248,10 @@ Stage 2 "incoming request"
   });
   
   socket.on("send request", function(opponent) {
+    clearInterval( interval );
+    server.setBroadcast( false );
     OPPONENT = {clientname: opponent.clientname, ip: opponent.ip, keepalive: GLOBAL.TIMEOUT, starts: false, turntimeout: GLOBAL.TURNTIMEOUT};
-    var timeoutInterval = setInverval( function() {
+    var timeoutInterval = setInterval( function() {
       OPPONENT.keepalive -= GLOBAL.FREQUENCY/1000;
       if (OPPONENT.keepalive <= 0) {
         socket.emit("timeout");

@@ -2,6 +2,7 @@
 	
 $(document).ready(function() {
 
+	//var socket = io.connect('http://localhost:8080');
 	var content;
 	var turn = 0;
 	var theCanvas;
@@ -61,21 +62,15 @@ $(document).ready(function() {
 	            // call second stage
 	            player_name = $_logOn.val()
 	    		console.log("trying to set new player name " + player_name);
-	    		/* socket.emit("set player name", player_name);
-	    		socket.on("set player name successful", function() { */
-	    			viewPlayers( false );
-	    		/* }); 
-	    		socket.on("set player name failed", function() {
-	    			showError( "Interner Fehler" );
-	    		});*/
-	            
+	    		//socket.emit("set Name", player_name);
+	    			viewPlayers( false );	            
 	        } else {
 	            showError( msg );
 	        }
 	    }); 
 	}
 
-	// var oldData = [];
+	var oldData = [];
 
 	viewPlayers = function( replay ) {
 		if( !replay ) {
@@ -90,11 +85,11 @@ $(document).ready(function() {
 	        });
 	    }
 
-	    /* console.log("trying to start game");
+	    console.log("trying to start game");
 
-	    socket.emit("start searching opponents");
+	    //socket.emit("start broadcast");
 
-	    socket.on("update opponent list", function( data ) { 
+	    /*socket.on("update opponent list", function( data ) { 
 
 	      newData = $.extend(true, [], data);
 
@@ -105,9 +100,14 @@ $(document).ready(function() {
 	      for ( var i=0; i<newData.length; i++ ) {
 	      	for ( var j=0; j<oldData.length; j++) {
 	      		if( newData[i].ip == oldData[j].ip ) {
-	      			oldData[j].clientname = newData[i].clientname;
-	      			newData[i].checked = true;
-	      			oldData[j].checked = true;
+	      			if(oldData[j].clientname != newData[i].clientname) {
+	      				oldData[j].clientname = newData[i].clientname;
+		      			newData[i].checked = false;
+		      			oldData[j].checked = false;
+		      		} else {
+						newData[i].checked = true;
+		      			oldData[j].checked = true;
+		      		}
 	      		}
 	      	}
 	      }
@@ -124,67 +124,86 @@ $(document).ready(function() {
 	      	if( newData[i].checked != true ) {
 	      		// add 
 	      		if($("ul#playerList").children().length > 0) {
+	      			console.log(newData[i]);
 	      			$("ul#playerList").append('<li data-ip="' + newData[i].ip + '"><a href="#" class="button toPlayground"><span>Play</span></a><div class="player">' + newData[i].clientname + '</div></li>');
 	      			$("ul#playerList").children().last().animate({opacity:1}, 1000);
-	      		} else
+	      		} else {
 	      			$("ul#playerList").html('<li data-ip="' + newData[i].ip + '"><a href="#" class="button toPlayground"><span>Play</span></a><div class="player">' + newData[i].clientname + '</div></li>')
 	      				.children().animate({opacity:1}, 1000);
+	      			console.log(newData[i]);
+	      		}
 	      		oldData.push( newData[i] );
 	      	}
 
-	      }
+	      }*/
 
-	      socket.on("incoming request", function( data ) {
+	      /*socket.on("incoming request", function( data ) {
 	      	console.log( data );
-	      	$(".popup").html("<h2>\"" +  $(this).find(".player").text() + '\" würde gerne mit dir spielen.</h2><a href="#" class="button replay_yes" id="logOnPlay"><span>Ja</span></a><a href="#" class="button replay_no" id="logOnPlay"><span>Nein</span></a>');
+	      	$(".popup").html("<h2>\"" + data.clientname + '\" würde gerne mit dir spielen.</h2><a href="#" class="button play_yes" id="logOnPlay"><span>Ja</span></a><a href="#" class="button replay_no" id="logOnPlay"><span>Nein</span></a>');
             $(".popup").css("display", "block");
             $(".popup").animate({opacity:1}, 1000);
-	      	
-	      }); */
 
-	      /* $("#playerList li").each(function() {
-	          $(this).click( function(e) {
+            $(".play_yes").click(function() {
+            	socket.emit("incoming request accept");
+            	startPlayground( false );
+            })
+
+	      });*/
+
+	      $(document).on("click", ".toPlayground", function(e) {
+	      	e.preventDefault();
+	      	console.log("play with: " + "{clientname: " + $(this).parent().find(".player").text() + ", ip: " + $(this).parent().data("ip") + "}");
+            //socket.emit("send request", {clientname: $(this).parent().find(".player").text(), ip: $(this).parent().data("ip")});
+            $(".popup").html("<h2>Waiting for \"" +  $(this).find(".player").text() + "\"</h2>");
+            $(".popup").css("display", "block");
+            $(".popup").animate({opacity:1}, 1000);
+            //socket.on("request accepted", function( data ) {
+            	initFourInANode();
+            	//popup reseten
+            	$(".popup").css("display", "none");
+            	$(".popup").animate({opacity:0}, 500);
+            	startPlayground( false );
+            //});
+	      });
+	      /*
+	      $(".toPlayground").live().each( function() {
+	      	$(this).live("click", function(e) {
+	      		console.log("asdfasdf");
 	            e.preventDefault();
-	            console.log("play with: " + "{clientname: " + $(this).find(".player").text() + ", ip: " + $(this).data("ip") + "}");
-	            socket.emit("play with", {clientname: $(this).find(".player").text(), ip: $(this).data("ip")});
+	            console.log("play with: " + "{clientname: " + $(this).parent().find(".player").text() + ", ip: " + $(this).parent().data("ip") + "}");
+	            socket.emit("send request", {clientname: $(this).find(".player").text(), ip: $(this).data("ip")});
 	            $(".popup").html("<h2>Waiting for \"" +  $(this).find(".player").text() + "\"</h2>");
 	            $(".popup").css("display", "block");
 	            $(".popup").animate({opacity:1}, 1000);
-	            socket.on("play request accepted", function( data ) {
+	            socket.on("request accepted", function( data ) {
 	            	initFourInANode();
 	            	//popup reseten
 	            	$(".popup").css("display", "none");
 	            	$(".popup").animate({opacity:0}, 500);
 	            	startPlayground( false );
 	            });
-	          });
-	      }
-	    });*/
-	  
-	    $(".toPlayground").live("click", function() {
-	        opponent_name = $(this).next().text();
-	        console.log("send game request");
-	        // socket.emit("send game request", opponent_name);
-	        initFourInANode();
-	        startPlayground( false );
-	        
-	    });
-	}
-
-	startPlayground = function( replay ) {
-		if(!replay) {
-	        show(".mainStart", ".mainPlayground", function() {
-	        	$("p.info").html("Du bist angemeldet als <b>" + player_name + ".<br />Los geht's!</b>");
-		        $("span.player1").html( player_name );
-		        $("span.player2").html( opponent_name );
 	        });
-	    } else {
-	    	show(".popup", ".mainPlayground", function() {})
-	    	initFourInANode();
-	    }
+
+	    });
+	  });*/
 	}
 
-	closeFourInANode = function() {
+	function startPlayground ( replay ) {
+		//socket.on("incoming request verified", function() {
+			if(!replay) {
+		        show(".mainStart", ".mainPlayground", function() {
+		        	$("p.info").html("Du bist angemeldet als <b>" + player_name + ".<br />Los geht's!</b>");
+			        $("span.player1").html( player_name );
+			        $("span.player2").html( opponent_name );
+		        });
+		    } else {
+		    	show(".popup", ".mainPlayground", function() {})
+		    	initFourInANode();
+		    }
+		//});
+	}
+
+	function closeFourInANode() {
 		show(".mainPlayground", ".mainClose", function() {
 			$("p.info").html("");
 			$(".popup").css("display", "none");
@@ -194,13 +213,13 @@ $(document).ready(function() {
 		});
 	}
 
-	showError = function( msg ) {
+	function showError( msg ) {
 	    console.log("error :: " + msg)
 	    $("p.error").html(msg);
 	    $("p.error").show();
 	}
 
-	show = function( current, target, doThis ) {
+	function show( current, target, doThis ) {
 	    $(current).animate( {opacity: 0}, 400);
 	   	$(current).queue("fx", function(next) { 
 	   		$(this).css("display", "none");
@@ -214,7 +233,7 @@ $(document).ready(function() {
 	   	});
 	}
 
-	drawCircle = function(theCanvas, fillColor, strokeColor, posX, posY, radius) {
+	function drawCircle(theCanvas, fillColor, strokeColor, posX, posY, radius) {
 		// console.log(theCanvas);
 		context = theCanvas.getContext("2d");
 		
@@ -229,9 +248,9 @@ $(document).ready(function() {
 	}
 
 	//Functions to get the Winner
-	checkWinner = function(row, colNumber) {
+	function checkWinner(row, colNumber) {
 		var counter;
-		var getPlayer = content[row+"_"+colNumber];
+		var getPlayer = content[row][colNumber];
 		
 		checkVertical();
 		checkHorizontal(row);
@@ -248,7 +267,7 @@ $(document).ready(function() {
 		function checkVertical() {
 			counter = 0;
 			for(var i=1; i<7; i++) {
-				if(content[i + "_" + colNumber] == getPlayer){
+				if(content[i][colNumber] == getPlayer){
 					counter++;
 					if(counter >= 4) {
 						for(j = i; j > (i-4); j--)
@@ -266,7 +285,7 @@ $(document).ready(function() {
 		function checkHorizontal(row) {
 			counter = 0;
 			for(var i=1; i<8; i++) {
-				if(content[row+"_"+i] == getPlayer){
+				if(content[row][i] == getPlayer){
 					counter++;
 					if( counter >= 4) {
 						for(var j = i; j > (i-4); --j)
@@ -294,7 +313,7 @@ $(document).ready(function() {
 			
 			for(var i=0; i<6; i++) {
 				//console.log(r+"_"+col);
-				if(content[r+"_"+col] == getPlayer){
+				if(content[r][col] == getPlayer){
 					counter++;
 					if( counter >= 4) {
 						for( var j = 0; j < 4; ++j) {
@@ -327,7 +346,7 @@ $(document).ready(function() {
 
 			for(var i=0; i<6; i++) {
 				
-				if(content[r+"_"+col] == getPlayer){
+				if(content[r][col] == getPlayer){
 					counter++;
 					if( counter >= 4 ) {
 						for( var j = 0; j < 4; ++j ) {
@@ -348,18 +367,18 @@ $(document).ready(function() {
 		}
 	}
 
-	initField = function() {
+	function initField() {
 		for(var i=1; i<7; i++){
 			for(var j=1; j<8; j++){
-				field_occupied[i + "_" + j] = false;
-				content[i + "_" + j]='';
-				$( "#canvas"+i+"_"+j )[0].width = $( "#canvas"+i+"_"+j )[0].width;
+				field_occupied[i][j] = false;
+				content[i][j]='';
+				$( "#canvas" + i + "_" + j )[0].width = $( "#canvas" + i + "_" + j )[0].width;
 			}
 			//resetCanvas( "canvas0_"+j );
 		} 
 	};
 
-	initArrows = function() {
+	function initArrows() {
 		for(var i=1; i<8; i++) {
 			theCanvas = "canvas0_" + i + "_1";
 			theCanvasInactive = "canvas0" + "_" + i + "_0";
@@ -374,7 +393,7 @@ $(document).ready(function() {
 		}
 	};
 
-	bindCanvas = function() {
+	function bindCanvas() {
 		//This handles the mouse-over Effect on arrows and fields (changing colors)
 		$("canvas").hover( function(e) {
 			e.preventDefault();
@@ -395,8 +414,10 @@ $(document).ready(function() {
 			$("#canvas" + i + "_" + col).css("border-color", "#000");
 		}
 		//new canvas
-		for( var i = 7; i > 0; i--) {
-			if( field_occupied[i + "_" + col] == false ) {
+		for( var i = 6; i >= 0; i--) {
+			console.log("col: "+col);
+			console.log(field_occupied[0][col]);
+			if( field_occupied[i][col] == false ) {
 				theCanvas = $("#canvas" + i + "_" + col);
 				break;
 			}
@@ -441,7 +462,7 @@ $(document).ready(function() {
 			if( turn%2==0 ){
 				var i = 6;
 				while( freeField==false && i>0 ) {
-					if( (field_occupied[i + "_" + colNumber] )==false ){
+					if( (field_occupied[i][colNumber] )==false ){
 
 						var theCanvas = $("#canvas" + i + "_" + colNumber);	
 						// add new canvas
@@ -464,8 +485,8 @@ $(document).ready(function() {
 						$('.player1').css('font-weight','normal');
 						
 						//To see which field is already occupied with a stone
-						field_occupied[i + "_" + colNumber] = true;
-						content[i + "_" + colNumber] = player_name;
+						field_occupied[i][colNumber] = true;
+						content[i][colNumber] = player_name;
 						
 						turn++;
 						checkWinner(i, colNumber);
@@ -488,7 +509,7 @@ $(document).ready(function() {
 			} else if(turn%2!=0) {
 				i=6;
 				while( freeField==false && i>0 ){
-					if( (field_occupied[i + "_" + colNumber] )==false ){
+					if( (field_occupied[i][colNumber] )==false ){
 
 						var theCanvas = $("#canvas" + i + "_" + colNumber);	
 						// add new canvas
@@ -510,8 +531,8 @@ $(document).ready(function() {
         					$("#player1").effect("bounce", { times:3 }, 600);
         				}, 1500);
 						
-						content[i + "_" + colNumber] = opponent_name;
-						field_occupied[i + "_" + colNumber]=true;
+						content[i][colNumber] = opponent_name;
+						field_occupied[i][colNumber]=true;
 						
 						turn++;
 						checkWinner(i, colNumber);
@@ -554,7 +575,7 @@ $(document).ready(function() {
 
 	$(".canvas_div").mousedown(function(e){e.preventDefault();});
 
-	playAgain = function( player ){
+	function playAgain( player ){
 
 		var text = "";
 		if( player == '' ) 
@@ -583,9 +604,18 @@ $(document).ready(function() {
 		}, 1000);
 	}
 
-	initFourInANode = function() {
-		content = new Array();
-		field_occupied = new Array();
+	function initFourInANode() {
+		content = [];
+		field_occupied = [];
+		for(var i = 0; i < 7; i++) {
+			content[i] = new Array();
+			field_occupied[i] = new Array();
+			for (var j=0; j<8; j++) {
+				content[i][j] = ""; 
+				field_occupied[i][j] = true;
+			}
+		}
+
 		freeField = false;
 		turn = 0;
 		$('.player1').css('font-weight','bold');
@@ -608,7 +638,7 @@ $(document).ready(function() {
 		}
 	}
 
-	unBindElements = function( col, win ) {
+	function unBindElements( col, win ) {
 		for( var i = 1; i < 7; i++ ) {
 			$("#canvas" + i + "_" + col).unbind('mouseenter').unbind('mouseleave');
 			if(!win) {
@@ -618,14 +648,14 @@ $(document).ready(function() {
 		}
 	}
 
-	unBindField = function ( win ) {
+	function unBindField( win ) {
 		for( var i = 0; i < 7; ++i) {
 			unBindControlls(i);
 			unBindElements(i, win);
 		}
 	}
 
-	unBindControlls = function( col ) {
+	function unBindControlls( col ) {
 		$("#canvas0_" + col + "_1").unbind('mouseenter').unbind('mouseleave');
 		$("#canvas0_" + col + "_0").unbind('mouseenter').unbind('mouseleave');
 	}
@@ -668,14 +698,23 @@ $(document).ready(function() {
       drop: function( event ) {
       	setPoint( $(this).data("col") );
       }, over: function () {
-      	if( !field_occupied["1_" + $(this).data("col")] )
+      	if( !field_occupied[1][$(this).data("col")] )
       		hoverOn( $(this).data("col") );
       }, out: function () {
-      	if( !field_occupied["1_" + $(this).data("col")] )
+      	if( !field_occupied[1][$(this).data("col")] )
       		hoverOut( $(this).data("col") );
       }
     });
 
 	 $("div, document, canvas").click(function(e){e.preventDefault();});
 
+
+	/* socket.on("timeout", function() {
+	 	console.log("timeout");
+	 	$("#logOn").css("display", "none");
+	 	$("#mainStart").css("display", "none");
+	 	$("#mainPlayground").css("display", "none");
+		show(".popup", "#mainStart");
+		socket.emit("start broadcast");
+	 });*/
 });
