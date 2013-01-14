@@ -13,6 +13,8 @@ $(document).ready(function() {
 	var player_name;
 	var opponent_name;
 	var enabled = true;
+	animationActive = false;
+	bounceInterval = null;
 
 	//Variables for Pictures
 	var arrow;
@@ -72,6 +74,9 @@ $(document).ready(function() {
 	        } else {
 	            showError( msg );
 	        }
+	        bounceInterval = setInterval( function() {
+				$("#player1").effect("bounce", { times:3 }, 600);
+			}, 1500);
 	    }); 
 	}
 
@@ -376,7 +381,7 @@ $(document).ready(function() {
 
 	bindCanvas = function() {
 		//This handles the mouse-over Effect on arrows and fields (changing colors)
-		$("canvas").hover( function(e) {
+		$(".arrows_div canvas, .canvas_div canvas").hover( function(e) {
 			e.preventDefault();
 			hoverOn( $(this).data("col") );
 		}, function(e) {
@@ -386,6 +391,7 @@ $(document).ready(function() {
 	}
 
 	function hoverOn( col ) {
+		$("#hoverCanvas").remove();
 		$("#canvas0_" + col + "_1").css("opacity", 0);
 		$("#canvas0_" + col + "_0").css("opacity", 1);
 
@@ -404,11 +410,13 @@ $(document).ready(function() {
 
 		theCanvas.after('<canvas id="hoverCanvas" width="50" height="50"></canvas>');
 		var hoverCanvas = $("#hoverCanvas");
-		hoverCanvas.css({marginLeft: -50, opacity: 0.5});
+		hoverCanvas.css({marginLeft: -50, opacity: 0.5, border:"none"});
 		if( turn%2 == 0 ) {
-        	fillColor = "#616161" ; strokeColor = "#4b4b4b";
+        	//fillColor = "#616161" ; strokeColor = "#4b4b4b";
+        	fillColor = "#aa0000" ; strokeColor = "#880000";
         } else {
-        	fillColor = "#ffa200" ; strokeColor = "#ea6900";
+        	//fillColor = "#ffa200" ; strokeColor = "#ea6900";
+        	fillColor = "#0000aa" ; strokeColor = "#000088";
         }
 		drawCircle(hoverCanvas[0], fillColor, strokeColor, 25, 25, 20);
 
@@ -429,12 +437,15 @@ $(document).ready(function() {
 		$("#hoverCanvas").remove();
 		colNumber = $(this).data("col");
 		setPoint( colNumber );
+		$("#hoverCanvas").remove();
 	});
 
 	function setPoint( colNumber ) {
-        
-    if( typeof(bounceInterval) == "undefined" )
-    	bounceInterval = null;
+		if (animationActive == true)
+			return;
+		animationActive = true;
+        if( typeof(bounceInterval) == "undefined" )
+        	bounceInterval = null;
 		clearInterval( bounceInterval );
 
 		if( enabled ) {
@@ -447,12 +458,13 @@ $(document).ready(function() {
 						// add new canvas
 						theCanvas.after('<canvas id="canvasTmpCopy" width="50" height="50"></canvas>');
 						var tmpCanvas = $("#canvasTmpCopy");
-						tmpCanvas.css({top: 180, marginLeft: -50});
-						drawCircle(tmpCanvas[0], '#616161', '#4b4b4b', 25, 25, 20);
+						tmpCanvas.css({top: 180, marginLeft: -50, border:"none", background:"transparent"});
+						drawCircle(tmpCanvas[0], '#aa0000', '#880000', 25, 25, 20);
 						
 						tmpCanvas.animate({top: theCanvas.position().top}, 1000, "easeOutBounce", function() {
-							drawCircle(theCanvas[0], '#616161', '#4b4b4b', 25, 25, 20);
+							drawCircle(theCanvas[0], '#aa0000', '#880000', 25, 25, 20);
 							tmpCanvas.remove();
+							animationActive = false;
 						});
 						
 						$('.player2').css('font-weight','bold');
@@ -478,8 +490,8 @@ $(document).ready(function() {
 					$("#canvas0_" + colNumber + "_1").css("opacity", 1);
 					$("#canvas0_" + colNumber + "_0").css("opacity", 0);
 
-					theCanvas = "canvas0_" + colNumber + "_1"; 
-					c = document.getElementById(theCanvas);
+					var myCanvas = "canvas0_" + colNumber + "_1"; 
+					c = document.getElementById(myCanvas);
 					context = c.getContext("2d");
 					context.drawImage(cross, 10, 10);
 					unBindControlls( colNumber );
@@ -494,11 +506,12 @@ $(document).ready(function() {
 						// add new canvas
 						theCanvas.after('<canvas id="canvasTmpCopy" width="50" height="50"></canvas>');
 						var tmpCanvas = $("#canvasTmpCopy");
-						tmpCanvas.css({top: 180, marginLeft: -50});
-						drawCircle(tmpCanvas[0], '#ffa200', '#ea6900', 25, 25, 20);
+						tmpCanvas.css({top: 180, marginLeft: -50, border:"none", background:"transparent"});
+						drawCircle(tmpCanvas[0], '#0000aa', '#000088', 25, 25, 20);
 						tmpCanvas.animate({top: theCanvas.position().top}, 1000, "easeOutBounce", function() {
-							drawCircle(theCanvas[0], '#ffa200', '#ea6900', 25, 25, 20);
+							drawCircle(theCanvas[0], '#0000aa', '#000088', 25, 25, 20);
 							tmpCanvas.remove();
+							animationActive = false;
 						});
 						
 						$('.player1').css('font-weight','bold');
@@ -524,8 +537,8 @@ $(document).ready(function() {
 					$("#canvas0_" + colNumber + "_1").css("opacity", 1);
 					$("#canvas0_" + colNumber + "_0").css("opacity", 0);
 
-					theCanvas = "canvas0_" + colNumber + "_1"; 
-					c = document.getElementById(theCanvas);
+					var myCanvas = "canvas0_" + colNumber + "_1"; 
+					c = document.getElementById(myCanvas);
 					context = c.getContext("2d");
 					context.drawImage(cross, 10, 10);
 					unBindControlls( colNumber );
@@ -599,10 +612,10 @@ $(document).ready(function() {
 		for(var i=1; i<3; i++) {
 			theCanvas = $("#player"+i);
 			if( theCanvas.attr("id")=="player1" ) {
-				drawCircle(theCanvas[0], '#616161', '#4b4b4b', 15, 15, 10);
+				drawCircle(theCanvas[0], '#aa0000', '#880000', 15, 15, 10);
 				// drawCircle(theCanvas + 'copy', '#616161', '#4b4b4b', 15, 15, 10);
 			} else {
-				drawCircle(theCanvas[0], '#ffa200', '#ea6900', 15, 15, 10);
+				drawCircle(theCanvas[0], '#0000aa', '#000088', 15, 15, 10);
 				// drawCircle(theCanvas + 'copy', '#ffa200', '#ea6900', 15, 15, 10);
 			}
 		}
@@ -632,15 +645,21 @@ $(document).ready(function() {
 
 	function draggableTurn( turn ) {
 		playerId = ( turn%2 ) ? "2" : "1";
+		playerId2 = ( turn%2 ) ? "1" : "2";
+		console.log("drag");
+
+
 	    $("#player" + playerId).draggable({
-	        revert: "invalid",
+	        revert: false,
 	        cursorAt: { left: 25, top: 25 },
 	        start: function( e ) {
 	        	theCanvasCopy = $("#" + $(this).attr("id") + "copy" );
 	        	if( $(this).attr("id") == "player1" ) {
-	            	fillColor = "#616161" ; strokeColor = "#4b4b4b";
+	            	//fillColor = "#616161" ; strokeColor = "#4b4b4b";
+	            	fillColor = "#aa0000" ; strokeColor = "#880000";
 	            } else {
-	            	fillColor = "#ffa200" ; strokeColor = "#ea6900";            	
+	            	//fillColor = "#ffa200" ; strokeColor = "#ea6900";  
+	            	fillColor = "#0000aa" ; strokeColor = "#000088";            	
 	            }
 
 	            theCanvasCopy.css("display", "block");
@@ -650,19 +669,21 @@ $(document).ready(function() {
 	            var interval = setInterval( function() {
 	            	i += 1;
 	            	if( i >= 30 )
-	            		clearInterval( interval )
+	            		clearInterval( interval );
 	            	theCanvasCopy.width(20+i).height(20+i);
 	            }, 10)
 	            // return $( "#" + theCanvas );
 	        },
-	        helper: function( e ) {
+	        helper: function( ) {
 	            return $( "#" + $(this).attr("id") + "copy" ).css("opacity", 0.8);
 	        },
 	        stop: function () {
-	    		$(this).after('<canvas id="' + $(this).attr("id") + "copy" + '" width="50" height="50" style="opacity:0;"></canvas>');
+	        	console.log("STOOOP");
+	    		$("#players").append('<canvas id="' + $(this).attr("id") + "copy" + '" width="50" height="50" style="opacity:0;"></canvas>');
 	        }
 	    });
 	}
+
 
 	 $( ".arrows_div canvas, .canvas_div canvas" ).droppable({
       drop: function( event ) {
