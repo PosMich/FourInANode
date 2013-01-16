@@ -315,6 +315,7 @@ Stage 2 "incoming request"
       }
 
       var msg = new Buffer(JSON.stringify(GLOBAL.messages.ready()));
+      console.log("========================= SEND STAGE 3 TO OPPONENT");
       server.send(msg, 0, msg.length, GLOBAL.PORT, OPPONENT.ip);
     }, GLOBAL.FREQUENCY);
 
