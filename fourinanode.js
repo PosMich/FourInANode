@@ -347,10 +347,12 @@ Stage 2 "incoming request"
   });
 
   socket.on("turn", function(data) {
-    turnHandler(data.column, false);
+    turnHandler(data, false);
   });
 
   function turnHandler( clmn, incoming ) {
+    var lastturn = TURN;
+
     clearInterval( timeoutInterval );
     timeoutInterval = setInterval(function() {
       OPPONENT.keepalive  -= GLOBAL.FREQUENCY/1000;
@@ -371,7 +373,7 @@ Stage 2 "incoming request"
       }
 
       if (incoming == false) {
-        var msg = new Buffer(JSON.stringify(GLOBAL.messages.turn(clmn, TURN)));
+        var msg = new Buffer(JSON.stringify(GLOBAL.messages.turn(clmn, lastturn)));
         console.log("============ OUTOING TURN");
         console.log(msg);
         server.send(msg, 0, msg.length, GLOBAL.PORT, OPPONENT.ip);
@@ -380,7 +382,9 @@ Stage 2 "incoming request"
 
 
     if (incoming == true) {
-
+      console.log("============ INCOMING TURN");
+      OPPONENT.keepalive = GLOBAL.TIMEOUT;
+      OPPONENT.turntimeout = GLOBAL.TURNTIMEOUT;
       socket.emit("turn", {column: clmn, turn: TURN});
     }
 
@@ -393,13 +397,13 @@ Stage 2 "incoming request"
         var msg = JSON.parse(msg);
         if (validateMessage( msg, GLOBAL.messages.turn(0,0)) == true) {
           if ( rinfo.address == OPPONENT.ip ) {            
-            if (incoming == true && msg.turn == (TURN-1)) {
-              OPPONENT.keepalive = GLOBAL.TIMEOUT;
-            } else if ( incoming == false && msg.turn == TURN ) {
+            if ( incoming == false && msg.turn == TURN ) {
               clearInterval(timeoutInterval);
               clearInterval(turnTimeoutInterval);
               turnHandler( msg.column, true);
             }
+            if( incoming == true && msg.turn == lastturn )
+              OPPONENT.keepalive = GLOBAL.TIMEOUT;
           }
         } 
       } catch (err) {
