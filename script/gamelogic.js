@@ -155,11 +155,14 @@ $(document).ready(function() {
         	console.log("incoming request accept");
         	socket.removeAllListeners("incoming request verified");
         	socket.on("incoming request verified", function() {
-        		console.log("ready for gaḿe");
         		socket.emit("ready for game");
-        		initFourInANode();
-        		startPlayground( false );
-        		turnOffset = 1;
+        		socket.removeAllListeners("incoming request verified");
+        		socket.on("start game", function() {
+							console.log("start gaḿe");
+        			initFourInANode();
+        			startPlayground( false );
+        			turnOffset = 1;
+        		});
         	}); 	
       	});
       });
