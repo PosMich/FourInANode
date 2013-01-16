@@ -156,13 +156,10 @@ $(document).ready(function() {
         	socket.removeAllListeners("incoming request verified");
         	socket.on("incoming request verified", function() {
         		socket.emit("ready for game");
-        		socket.removeAllListeners("incoming request verified");
-        		socket.on("start game", function() {
-							console.log("start gaḿe");
-        			initFourInANode();
-        			startPlayground( false );
-        			turnOffset = 1;
-        		});
+						console.log("start gaḿe");
+      			initFourInANode();
+      			startPlayground( false );
+      			turnOffset = 1;
         	}); 	
       	});
       });
@@ -179,11 +176,14 @@ $(document).ready(function() {
           socket.removeAllListeners("request accepted");
           socket.on("request accepted", function( data ) {
           	socket.emit("ready for game");
-          	initFourInANode();
-          	//popup reseten
-          	$(".popup").css("display", "none");
-          	$(".popup").animate({opacity:0}, 500);
-          	startPlayground( true );
+          	socket.removeAllListeners("start game");
+          	socket.on("start game", function() {
+	          	initFourInANode();
+	          	//popup reseten
+	          	$(".popup").css("display", "none");
+	          	$(".popup").animate({opacity:0}, 500);
+	          	startPlayground( true );
+	          });
           });
         });
     	});

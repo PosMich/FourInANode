@@ -276,8 +276,6 @@ Stage 2 "incoming request"
         clearInterval(timeoutInterval);
         socket.emit("timeout");
       }
-      console.log("==========================================");
-      console.log(OPPONENT);
       var msg = new Buffer( JSON.stringify( GLOBAL.messages.request() ) );
       server.send( msg, 0, msg.length, GLOBAL.PORT, OPPONENT.ip );
     }, GLOBAL.FREQUENCY);
@@ -306,6 +304,8 @@ Stage 2 "incoming request"
 
   socket.on("ready for game", function() {
     OPPONENT.keepalive = GLOBAL.TIMEOUT;
+    console.log("==================== OPP ==========");
+    console.log(OPPONENT);
     clearInterval(timeoutInterval);
     timeoutInterval = setInterval(function() {
       OPPONENT.keepalive -= GLOBAL.FREQUENCY/1000;
