@@ -29,17 +29,18 @@ GLOBAL.MYIPS = addresses;
 
 /*********************** GAME OPTIONS *****************************/
 
-GLOBAL.VERSION    = 2;
+GLOBAL.VERSION       = 2;
 // working port
-GLOBAL.PORT        = 32442;
+GLOBAL.PORT          = 32442;
 // Broadcast address
-GLOBAL.BROADCAST   = "255.255.255.255";
+GLOBAL.BROADCAST     = "255.255.255.255";
 // frequency of sending network messages
-GLOBAL.FREQUENCY   = 2000;
-GLOBAL.TIMEOUT     = 10;
-GLOBAL.TURNTIMEOUT = 30;
-GLOBAL.NAME        = "Tha Playa";
-GLOBAL.CLIENTTYPE = 1;
+GLOBAL.FREQUENCY     = 2000;
+GLOBAL.TIMEOUT       = 10;
+GLOBAL.TURNTIMEOUT   = 30;
+GLOBAL.NAME          = "Tha Playa";
+GLOBAL.CLIENTTYPE    = 1;
+GLOBAL.ERRORFREQ = 10;
 
 /*********************** JSON MESSAGE VARS ************************/
 
@@ -63,9 +64,12 @@ io.sockets.on('connection', function (socket) {
   server.bind(PORT);
 
   interval = null;
+  timeoutInterval = 0;
+  turnTimeoutInterval = 0;
+  error = 0;
   var TURN = -1;
   var OPPONENTS = [];
-  var OPPONENT = {clientname: "asdf", ip: "123.123.123.123", keepalive: GLOBAL.TIMEOUT, starts: false, turntimeout: GLOBAL.TURNTIMEOUT};
+  var OPPONENT = {clientname: "asdf", ip: "0", keepalive: GLOBAL.TIMEOUT, starts: false, turntimeout: GLOBAL.TURNTIMEOUT};
 /*
 socket zeugs:
 
@@ -163,6 +167,8 @@ Stage 1 "Spieler finden"
           clearInterval(interval);
           server.setBroadcast(false);
           incomingRequestHandler(msg, rinfo.address);
+        } else if ( OPPONENT.ip != "0" && OPPONENT.ip == rinfo.address && msg.stage == 99 ) {
+          clearInterval( error );
         }
         
       } catch(err) {
@@ -181,20 +187,23 @@ Stage 2 "incoming request"
   server: timeout             socket.emit("timeout")
 */
   function incomingRequestHandler(msg, ip) {
+    clearInterval(error);
     OPPONENT.clientname = msg.clientname;
     OPPONENT.ip = ip;
     OPPONENT.starts = true;
     OPPONENT.keepalive = GLOBAL.TIMEOUT;
     OPPONENT.turntimeout = GLOBAL.TURNTIMEOUT;
-    
+    TURN = 0;
+
     socket.emit("incoming request", {clientname:OPPONENT.clientname,ip:OPPONENT.ip});
     socket.emit("update Opponents");
 
-    var timeoutInterval = setInterval(function() {
+    clearInterval(timeoutInterval);
+    timeoutInterval = setInterval(function() {
       OPPONENT.keepalive -= GLOBAL.FREQUENCY/1000;
       if ( OPPONENT.keepalive <= 0 ) {
-        socket.emit("timeout");
         clearInterval(timeoutInterval);
+        socket.emit("timeout");
       }
     }, GLOBAL.FREQUENCY);
 
@@ -216,18 +225,22 @@ Stage 2 "incoming request"
     })
   }
 
+  socket.on("incoming request decline", function() {
+    clearInterval(timeoutInterval);
+  });
+
   socket.on("incoming request accept", function() {
-    var timeoutInterval = setInterval(function(){
+    clearInterval(timeoutInterval);
+    timeoutInterval = setInterval(function(){
       OPPONENT.keepalive -= GLOBAL.FREQUENCY/1000;
       if (OPPONENT.keepalive <=0) {
-        socket.emit("timeout");
         clearInterval(timeoutInterval);
+        socket.emit("timeout");
       }
 
       var msg = new Buffer(JSON.stringify(GLOBAL.messages.accepted()));
       server.send(msg, 0, msg.length, GLOBAL.PORT, OPPONENT.ip);
     }, GLOBAL.FREQUENCY);
-
     server.removeAllListeners("message");
     server.on("message", function(msg, rinfo) {
       if (isLocalhost(rinfo.address) == true)
@@ -235,11 +248,13 @@ Stage 2 "incoming request"
 
       try {
         var msg = JSON.parse(msg);
-        if (validateMessage( msg, GLOBAL.messages.request()) == true ) {
+        if (validateMessage( msg, GLOBAL.messages.request()) == true && OPPONENT.ip == rinfo.address ) {
+
           if (msg.clientname == OPPONENT.clientname)
             OPPONENT.keepalive = GLOBAL.TIMEOUT;
-        } else if (validateMessage(msg, GLOBAL.messages.ready()) == true) {
+        } else if (validateMessage(msg, GLOBAL.messages.ready()) == true && OPPONENT.ip == rinfo.address ){
           clearInterval(timeoutInterval);
+          OPPONENT.keepalive = GLOBAL.TIMEOUT;
           socket.emit("incoming request verified");
         }
         
@@ -250,13 +265,19 @@ Stage 2 "incoming request"
   });
   
   socket.on("send request", function(opponent) {
+    clearInterval(error);
     OPPONENT = {clientname: opponent.clientname, ip: opponent.ip, keepalive: GLOBAL.TIMEOUT, starts: false, turntimeout: GLOBAL.TURNTIMEOUT};
-    var timeoutInterval = setInterval( function() {
+    clearInterval(timeoutInterval);
+    timeoutInterval = setInterval( function() {
       OPPONENT.keepalive -= GLOBAL.FREQUENCY/1000;
       if (OPPONENT.keepalive <= 0) {
-        socket.emit("timeout");
         clearInterval(timeoutInterval);
+        socket.emit("timeout");
       }
+      console.log("==========================================");
+      console.log(OPPONENT);
+      var msg = new Buffer( JSON.stringify( GLOBAL.messages.request() ) );
+      server.send( msg, 0, msg.length, GLOBAL.PORT, OPPONENT.ip );
     }, GLOBAL.FREQUENCY);
 
     server.removeAllListeners("message");
@@ -267,7 +288,7 @@ Stage 2 "incoming request"
       try {
         var msg = JSON.parse(msg);
         // if i begin
-        if (validateMessage( msg, GLOBAL.messages.accepted()) == true) {
+        if ( validateMessage( msg, GLOBAL.messages.accepted() ) == true ) {
           // ready verfified, start game
           if (msg.clientname == OPPONENT.clientname) {
             clearInterval(timeoutInterval);
@@ -282,11 +303,13 @@ Stage 2 "incoming request"
   });
 
   socket.on("ready for game", function() {
-    var timeoutInterval = setInterval(function() {
+    OPPONENT.keepalive = GLOBAL.TIMEOUT;
+    clearInterval(timeoutInterval);
+    timeoutInterval = setInterval(function() {
       OPPONENT.keepalive -= GLOBAL.FREQUENCY/1000;
       if(OPPONENT.keepalive <= 0) {
-        socket.emit("timeout");
         clearInterval(timeoutInterval);
+        socket.emit("timeout");
       }
 
       var msg = new Buffer(JSON.stringify(GLOBAL.messages.ready()));
@@ -306,13 +329,12 @@ Stage 2 "incoming request"
           clearInterval(timeoutInterval);
           TURN = 0;
           socket.emit("start game");
-        } else if (validateMessage( msg, GLOBAL.messages.turn(0,0)) == true && OPPONENT.starts == true) {
-          //first turn
-          if (msg.turn == 0) {
-            clearInterval(timeoutInterval);
-            TURN = 0;
-            turnHandler(msg.column, msg.turn, true);
-          }
+        } else if (validateMessage( msg, GLOBAL.messages.turn(0,0)) == true 
+            && OPPONENT.starts == true
+            && TURN == msg.turn ) {
+          clearInterval(timeoutInterval);
+          TURN = 0;
+          turnHandler(msg.column, true);
         }
       } catch (err) {
         console.log("err: "+err);
@@ -321,11 +343,12 @@ Stage 2 "incoming request"
   });
 
   socket.on("turn", function(data) {
-    turnHandler(data.column, data.turn, false);
+    turnHandler(data.column, false);
   });
 
-  function turnHandler( clmn, trn, incoming ) {
-    var timeoutInterval = setInterval(function() {
+  function turnHandler( clmn, incoming ) {
+    clearInterval( timeoutInterval );
+    timeoutInterval = setInterval(function() {
       OPPONENT.keepalive  -= GLOBAL.FREQUENCY/1000;
       if ( OPPONENT.keepalive <= 0 ) {
         clearInterval( timeoutInterval );
@@ -334,7 +357,8 @@ Stage 2 "incoming request"
       }
     }, GLOBAL.FREQUENCY);
 
-    var turnTimeoutInterval = setInterval(function() {
+    clearInterval( turnTimeoutInterval );
+    turnTimeoutInterval = setInterval(function() {
       OPPONENT.turntimeout -= GLOBAL.FREQUENCY/1000;
       if ( OPPONENT.turntimeout <= 0 ) {
         clearInterval(timeoutInterval);
@@ -343,45 +367,47 @@ Stage 2 "incoming request"
       }
 
       if (incoming == false) {
-        var msg = new Buffer(JSON.stringify(GLOBAL.messages.turn(clmn, trn)));
+        var msg = new Buffer(JSON.stringify(GLOBAL.messages.turn(clmn, TURN)));
+        console.log("============ OUTOING TURN");
+        console.log(msg);
         server.send(msg, 0, msg.length, GLOBAL.PORT, OPPONENT.ip);
       }
     }, GLOBAL.FREQUENCY);
 
+
     if (incoming == true) {
-      socket.emit("turn", {column: clmn, turn: trn});
+
+      socket.emit("turn", {column: clmn, turn: TURN});
     }
 
     server.removeAllListeners("message");
-    socket.on("message", function() {
+    server.on("message", function(msg, rinfo) {
       if (isLocalhost(rinfo.address) == true)
         return;
 
       try {
         var msg = JSON.parse(msg);
-
         if (validateMessage( msg, GLOBAL.messages.turn(0,0)) == true) {
-          if ( msg.clientname == OPPONENT.clientname ) {
-            
-            if (incoming == true && msg.turn == TURN) {
+          if ( rinfo.address == OPPONENT.ip ) {            
+            if (incoming == true && msg.turn == (TURN-1)) {
               OPPONENT.keepalive = GLOBAL.TIMEOUT;
-            } else if ( incoming == false && msg.turn == TURN++ ) {
+            } else if ( incoming == false && msg.turn == TURN ) {
               clearInterval(timeoutInterval);
               clearInterval(turnTimeoutInterval);
-              // next turn
-              TURN++;
-              turnHandler( clmn, trn, true);
+              turnHandler( msg.column, true);
             }
           }
         } 
       } catch (err) {
-        console.log("err: "+err);
+        console.log("err: " + err);
       }
     });
+    TURN++;
   }
 
   socket.on("end of game", function() {
-    var timeoutInterval = setInterval(function() {
+    clearInterval(timeoutInterval);
+    timeoutInterval = setInterval(function() {
       OPPONENT.keepalive -= GLOBAL.FREQUENCY/1000;
       if (OPPONENT.keepalive <= 0 ) {
         clearInterval(timeoutInterval);
@@ -408,7 +434,18 @@ Stage 2 "incoming request"
     });
   });
 
+  socket.on("error", function() {
+    error = setInterval(function() {
+      var msg = new Buffer(JSON.stringify(GLOBAL.messages.abort()));
+      for(var i = 0; i < GLOBAL.ERRORFREQ; i++)
+        server.send(msg, 0, msg.length, GLOBAL.PORT, OPPONENT.ip);
+    }, GLOBAL.FREQUENCY);
+  });
+
   function validateMessage( msg, expected ) {
+    if ( msg.stage != expected.stage )
+      return false;
+
     // length must be equal
     if (msg.length != expected.length)
       return false;
@@ -419,7 +456,6 @@ Stage 2 "incoming request"
       // if key doesn't exist
       if(typeof(msg[key]) === undefined)
         return false;
-
       if ( typeof(msg[key]) != typeof(expected[key]) ) {
         if (typeof(expected[key]) != "string")
           return false;

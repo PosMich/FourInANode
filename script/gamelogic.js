@@ -3,29 +3,27 @@
 $(document).ready(function() {
 
 	var socket = io.connect('http://localhost:8080');
-	var content;
+	var content = [];
 	var turn = 0;
-	var theCanvas;
-	var c;
-	var context;
-	var replay;
-	var field_occupied;
-	var freeField;
-	var player_name;
-	var opponent_name;
+	var theCanvas = null;
+	var c = null;
+	var context = null;
+	var replay = true;
+	var field_occupied = [];
+	var freeField = true;
+	var player_name = "";
+	var opponent_name = "";
 	var enabled = true;
 	var oldData = [];
+	var turnEnabled = true;
+	var turnOffset = 0;
 	animationActive = false;
 	bounceInterval = null;
 
 	//Variables for Pictures
-	var arrow;
-	var arrow2;
-	var cross;
-
-	arrow = new Image();
-	arrow2 = new Image();
-	cross = new Image();
+	var arrow = new Image();
+	var arrow2 = new Image();
+	var cross = new Image();
 	arrow.src = 'img/Arrow2.png';
 	arrow2.src = 'img/Arrow.png';
 	cross.src = 'img/x.png';
@@ -65,7 +63,7 @@ $(document).ready(function() {
         // call second stage
         player_name = $_logOn.val()
   			console.log("trying to set new player name " + player_name);
-  			socket.emit("set name", player_name);
+  			socket.emit("set Name", player_name);
 				viewPlayers( false );
       } else {
         showError( msg );
@@ -92,7 +90,7 @@ $(document).ready(function() {
     console.log("trying to start game");
 
     socket.emit("start broadcast");
-
+    socket.removeAllListeners("update Opponents");
     socket.on("update Opponents", function( data ) { 
 
       newData = $.extend(true, [], data);
@@ -110,9 +108,7 @@ $(document).ready(function() {
       				newData[i].checked = false;
       				oldData[j].checked = false;      				
       			}
-      			//oldData[j].clientname = newData[i].clientname;
       		}
-
       	}
       }
 
@@ -138,9 +134,9 @@ $(document).ready(function() {
 
       }
 
+      socket.removeAllListeners("incoming request");
       socket.on("incoming request", function( data ) {
-
-      	console.log( data );
+      	opponent_name = data.clientname;
       	$(".popup").html("<h2>\"" +  data.clientname + 
       		'\" würde gerne mit dir spielen.</h2><a href="#" class="button accept_game_request" id="logOnPlay">' + 
       		'<span>Annehmen</span></a><a href="#" class="button reject_game_request" id="logOnPlay"><span>Ablehnen</span></a>');
@@ -150,16 +146,20 @@ $(document).ready(function() {
         $(".reject_game_request").click(function() {
       		$(".popup").css("display", "none");
         	$(".popup").animate({opacity: 0}, 1000);
+        	socket.emit("incoming request decline");
         	socket.emit("start broadcast");
       	});
 
         $(".accept_game_request").click(function() {
         	socket.emit("incoming request accept");
+        	console.log("incoming request accept");
+        	socket.removeAllListeners("incoming request verified");
         	socket.on("incoming request verified", function() {
-        		socket.emmit("ready for game");
-        		socket.on("start game", function() {
-        			startPlayground( false );
-        		});
+        		console.log("ready for gaḿe");
+        		socket.emit("ready for game");
+        		initFourInANode();
+        		startPlayground( false );
+        		turnOffset = 1;
         	}); 	
       	});
       });
@@ -169,42 +169,41 @@ $(document).ready(function() {
           e.preventDefault();
           console.log("send request: " + "{clientname: " + $(this).find(".player").text() + ", ip: " + $(this).data("ip") + "}");
           socket.emit("send request", {clientname: $(this).find(".player").text(), ip: $(this).data("ip")});
+          opponent_name = $(this).find(".player").text();
           $(".popup").html("<h2>Waiting for \"" +  $(this).find(".player").text() + "\"</h2>");
           $(".popup").css("display", "block");
           $(".popup").animate({opacity:1}, 1000);
+          socket.removeAllListeners("request accepted");
           socket.on("request accepted", function( data ) {
           	initFourInANode();
           	//popup reseten
           	$(".popup").css("display", "none");
           	$(".popup").animate({opacity:0}, 500);
-          	startPlayground( false );
+          	startPlayground( true );
           });
         });
     	});
     });
   }
-	  
-	    /* $(".toPlayground").live("click", function() {
-	        opponent_name = $(this).next().text();
-	        console.log("send game request");
-	        // socket.emit("send game request", opponent_name);
-	        initFourInANode();
-	        startPlayground( false );
-	        
-	    });
-	}*/
 
-	startPlayground = function( replay ) {
-		if(!replay) {
-	        show(".mainStart", ".mainPlayground", function() {
-	        	$("p.info").html("Du bist angemeldet als <b>" + player_name + ".<br />Los geht's!</b>");
-		        $("span.player1").html( player_name );
-		        $("span.player2").html( opponent_name );
-	        });
-	    } else {
-	    	show(".popup", ".mainPlayground", function() {})
-	    	initFourInANode();
-	    }
+	startPlayground = function( myTurn ) {
+
+		$(".popup").animate({opacity: 0}, 500);
+  	$(".popup").css("display", "none");
+
+  	turnEnabled = myTurn;
+
+    show(".mainStart", ".mainPlayground", function() {
+  		$("p.info").html("Du bist angemeldet als <b>" + player_name + ".<br />Los geht's!</b>");
+    	$("span.player1").html( player_name );
+  	  $("span.player2").html( opponent_name );
+
+  	  socket.removeAllListeners("turn");
+  	  socket.on("turn", function( data ) {
+  	  	setPoint( data.column );
+  	  	turnEnabled = true;
+  	  });
+	  });
 	}
 
 	closeFourInANode = function() {
@@ -264,7 +263,7 @@ $(document).ready(function() {
 		function Winner(counter) {
 			if(counter >= 4) {
 				enabled = false;
-	            playAgain( getPlayer );				
+	      playAgain( getPlayer );				
 			}
 		}
 		
@@ -400,11 +399,15 @@ $(document).ready(function() {
 	bindCanvas = function() {
 		//This handles the mouse-over Effect on arrows and fields (changing colors)
 		$(".arrows_div canvas, .canvas_div canvas").hover( function(e) {
-			e.preventDefault();
-			hoverOn( $(this).data("col") );
+			if( turnEnabled ) {
+				e.preventDefault();
+				hoverOn( $(this).data("col") );
+			}
 		}, function(e) {
-			e.preventDefault();
-			hoverOut( $(this).data("col") );
+			if( turnEnabled ) {
+				e.preventDefault();
+				hoverOut( $(this).data("col") );
+			}
 		});
 	}
 
@@ -452,10 +455,15 @@ $(document).ready(function() {
 
 	$(".arrows_div canvas, .canvas_div canvas").click(function(e) {
 		e.preventDefault();
-		$("#hoverCanvas").remove();
-		colNumber = $(this).data("col");
-		setPoint( colNumber );
-		$("#hoverCanvas").remove();
+		if( turnEnabled ) {
+			colNumber = $(this).data("col");
+			socket.emit("turn", colNumber)
+			$("#hoverCanvas").remove();
+			setPoint( colNumber );
+			$("#hoverCanvas").remove();
+			turnEnabled = false;
+			console.log("turnEnabled" + turnEnabled);
+		}
 	});
 
 	function setPoint( colNumber ) {
@@ -467,7 +475,7 @@ $(document).ready(function() {
 		clearInterval( bounceInterval );
 
 		if( enabled ) {
-			if( turn%2==0 ){
+			if( (turn+turnOffset)%2==0 ){
 				var i = 6;
 				while( freeField==false && i>0 ) {
 					if( (field_occupied[i + "_" + colNumber] )==false ){
@@ -515,7 +523,7 @@ $(document).ready(function() {
 					unBindControlls( colNumber );
 					unBindElements( colNumber, false );
 				}
-			} else if(turn%2!=0) {
+			} else if( (turn+turnOffset)%2 != 0 ) {
 				i=6;
 				while( freeField==false && i>0 ){
 					if( (field_occupied[i + "_" + colNumber] )==false ){
@@ -567,19 +575,9 @@ $(document).ready(function() {
 	 		freeField=false;
 			
 			//Counter for filled Squares; if it is full (42), the game is over by draw
-			if(turn==42){
+			if( (turn-turnOffset)==42 ){
 				playAgain("");
 			}
-			if(turn >= 1) {
-				playerId_disable = ( turn%2 ) ? "1" : "2";
-				playerId_enable = ( turn%2 ) ? "2" : "1";
-			}
-
-
-
-			$("#player" + playerId_disable).draggable( 'disable' );
-			draggableTurn( turn );			
-			$("#player" + playerId_enable).draggable( 'enable' );
 		}
 	}
 
@@ -629,13 +627,10 @@ $(document).ready(function() {
 		//making Coins for player 1 and player 2
 		for(var i=1; i<3; i++) {
 			theCanvas = $("#player"+i);
-			if( theCanvas.attr("id")=="player1" ) {
+			if( theCanvas.attr("id")=="player1" )
 				drawCircle(theCanvas[0], '#aa0000', '#880000', 15, 15, 10);
-				// drawCircle(theCanvas + 'copy', '#616161', '#4b4b4b', 15, 15, 10);
-			} else {
+			else
 				drawCircle(theCanvas[0], '#0000aa', '#000088', 15, 15, 10);
-				// drawCircle(theCanvas + 'copy', '#ffa200', '#ea6900', 15, 15, 10);
-			}
 		}
 	}
 
@@ -661,43 +656,32 @@ $(document).ready(function() {
 		$("#canvas0_" + col + "_0").unbind('mouseenter').unbind('mouseleave');
 	}
 
-	function draggableTurn( turn ) {
-		playerId = ( turn%2 ) ? "2" : "1";
-		playerId2 = ( turn%2 ) ? "1" : "2";
-		console.log("drag");
+	function draggableTurn() {
 
-
-	    $("#player" + playerId).draggable({
+	    $("#player1").draggable({
 	        revert: false,
 	        cursorAt: { left: 25, top: 25 },
 	        start: function( e ) {
-	        	theCanvasCopy = $("#" + $(this).attr("id") + "copy" );
-	        	if( $(this).attr("id") == "player1" ) {
-	            	//fillColor = "#616161" ; strokeColor = "#4b4b4b";
-	            	fillColor = "#aa0000" ; strokeColor = "#880000";
-	            } else {
-	            	//fillColor = "#ffa200" ; strokeColor = "#ea6900";  
-	            	fillColor = "#0000aa" ; strokeColor = "#000088";            	
-	            }
+	        	theCanvasCopy = $("#player1copy" );
+          	fillColor = "#aa0000" ; strokeColor = "#880000";
 
-	            theCanvasCopy.css("display", "block");
-	            drawCircle(theCanvasCopy[0], fillColor, strokeColor, 25, 25, 20 );
+            theCanvasCopy.css("display", "block");
+            drawCircle(theCanvasCopy[0], fillColor, strokeColor, 25, 25, 20 );
 
-	            var i = 0;
-	            var interval = setInterval( function() {
-	            	i += 1;
-	            	if( i >= 30 )
-	            		clearInterval( interval );
+            var i = 0;
+            var interval = setInterval( function() {
+      	    	i += 1;
+    	      	if( i >= 30 )
+            		clearInterval( interval );
 	            	theCanvasCopy.width(20+i).height(20+i);
 	            }, 10)
 	            // return $( "#" + theCanvas );
 	        },
 	        helper: function( ) {
-	            return $( "#" + $(this).attr("id") + "copy" ).css("opacity", 0.8);
+	            return $( "#player1copy" ).css("opacity", 0.8);
 	        },
 	        stop: function () {
-	        	console.log("STOOOP");
-	    		$("#players").append('<canvas id="' + $(this).attr("id") + "copy" + '" width="50" height="50" style="opacity:0;"></canvas>');
+	    			$("#players").append('<canvas id="player1copy" " width="50" height="50" style="opacity:0;"></canvas>');
 	        }
 	    });
 	}
@@ -723,4 +707,10 @@ $(document).ready(function() {
 	 	socket.emit("start broadcast");
 	 });
 
+	 socket.on("turn timeout", function() {
+	 	socket.emit("error");
+	 	$(".mainLogOn, .mainStart, .mainPlayground, .mainAbout, .mainClose, .popup").css({opacity: 0, display: "none"});
+	 	$(".mainStart").css({opacity: 1, display: "block"});
+	 	socket.emit("start broadcast");
+	 });
 });
