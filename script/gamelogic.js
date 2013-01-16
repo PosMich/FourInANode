@@ -175,6 +175,7 @@ $(document).ready(function() {
           $(".popup").animate({opacity:1}, 1000);
           socket.removeAllListeners("request accepted");
           socket.on("request accepted", function( data ) {
+          	socket.emit("ready for game");
           	initFourInANode();
           	//popup reseten
           	$(".popup").css("display", "none");
