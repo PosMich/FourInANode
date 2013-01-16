@@ -214,7 +214,7 @@ Stage 2 "incoming request"
 
       try {
         var msg = JSON.parse(msg);
-        if (validateMessage( msg, GLOBAL.messages.request) ) {
+        if (validateMessage( msg, GLOBAL.messages.request) == true ) {
           if (msg.clientname == OPPONENT.clientname)
             OPPONENT.keepalive = GLOBAL.TIMEOUT;
         }
@@ -326,14 +326,15 @@ Stage 2 "incoming request"
       try {
         var msg = JSON.parse(msg);
         // if i begin
-        if (validateMessage( msg, GLOBAL.messages.ready()) == true && OPPONENT.starts == false ) {
+        if (validateMessage( msg, GLOBAL.messages.ready()) == true && OPPONENT.starts == false && rinfo.address == OPPONENT.ip) {
           // ready verfified, start game
           clearInterval(timeoutInterval);
           TURN = 0;
           socket.emit("start game");
         } else if (validateMessage( msg, GLOBAL.messages.turn(0,0)) == true 
             && OPPONENT.starts == true
-            && TURN == msg.turn ) {
+            && TURN == msg.turn
+            && rinfo.address == OPPONENT.ip ) {
           clearInterval(timeoutInterval);
           TURN = 0;
           turnHandler(msg.column, true);
