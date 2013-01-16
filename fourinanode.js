@@ -339,7 +339,7 @@ Stage 2 "incoming request"
           turnHandler(msg.column, true);
         }
       } catch (err) {
-        console.log("err: "+err);
+        console.log("err: " + err);
       }
     });
   });
