@@ -265,6 +265,8 @@ Stage 2 "incoming request"
   });
   
   socket.on("send request", function(opponent) {
+    clearInterval(interval);
+    server.setBroadcast(false);
     clearInterval(error);
     OPPONENT = {clientname: opponent.clientname, ip: opponent.ip, keepalive: GLOBAL.TIMEOUT, starts: false, turntimeout: GLOBAL.TURNTIMEOUT};
     clearInterval(timeoutInterval);
@@ -290,7 +292,7 @@ Stage 2 "incoming request"
         // if i begin
         if ( validateMessage( msg, GLOBAL.messages.accepted() ) == true ) {
           // ready verfified, start game
-          if (msg.clientname == OPPONENT.clientname) {
+          if (rinfo.address == OPPONENT.ip) {
             clearInterval(timeoutInterval);
             TURN = 0;
             socket.emit("request accepted");
