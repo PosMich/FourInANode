@@ -352,6 +352,9 @@ Stage 2 "incoming request"
 
   function turnHandler( clmn, incoming ) {
     var lastturn = TURN;
+    TURN++;
+    console.log("=============================== last turn:");
+    console.log(lastturn);
 
     clearInterval( timeoutInterval );
     timeoutInterval = setInterval(function() {
@@ -373,6 +376,7 @@ Stage 2 "incoming request"
       }
 
       if (incoming == false) {
+        console.log("asjhdashfksdjhfjksdhfjksdfhsdjkh " + lastturn);
         var msg = new Buffer(JSON.stringify(GLOBAL.messages.turn(clmn, lastturn)));
         console.log("============ OUTOING TURN");
         console.log(msg);
@@ -385,7 +389,7 @@ Stage 2 "incoming request"
       console.log("============ INCOMING TURN");
       OPPONENT.keepalive = GLOBAL.TIMEOUT;
       OPPONENT.turntimeout = GLOBAL.TURNTIMEOUT;
-      socket.emit("turn", {column: clmn, turn: TURN});
+      socket.emit("turn", {column: clmn, turn: lastturn});
     }
 
     server.removeAllListeners("message");
@@ -402,15 +406,21 @@ Stage 2 "incoming request"
               clearInterval(turnTimeoutInterval);
               turnHandler( msg.column, true);
             }
-            if( incoming == true && msg.turn == lastturn )
+            if( incoming == true && msg.turn == lastturn || incoming == false && msg.turn == lastturn-1 ) {
+              console.log("did it!!!!!");
               OPPONENT.keepalive = GLOBAL.TIMEOUT;
+            }
           }
-        } 
+        } else if( validateMessage(msg, GLOBAL.messages.ready()) == true) {
+          console.log("LASTTURN " + lastturn);
+          console.log("ACTIVE TURN " + TURN);
+          console.log("did it!!!!!");
+          OPPONENT.keepalive = GLOBAL.TIMEOUT;
+        }
       } catch (err) {
         console.log("err: " + err);
       }
     });
-    TURN++;
   }
 
   socket.on("end of game", function() {
