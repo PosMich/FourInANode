@@ -2,6 +2,7 @@
 	
 $(document).ready(function() {
 
+	var socket = io.connect('http://localhost:8080');
 	var content;
 	var turn = 0;
 	var theCanvas;
@@ -13,6 +14,7 @@ $(document).ready(function() {
 	var player_name;
 	var opponent_name;
 	var enabled = true;
+	var oldData = [];
 	animationActive = false;
 	bounceInterval = null;
 
@@ -37,136 +39,152 @@ $(document).ready(function() {
 	});
 
 	startGame = function() {
-	    $(".mainLogOn").css("display", "block");
-	    $(".mainLogOn").animate({opacity: 1}, 1000);
-	    $("p.info").html("Um \"Vier Gewinnt\" spielen zu können, wähle zuerst deinen Namen.");
+    $(".mainLogOn").css("display", "block");
+    $(".mainLogOn").animate({opacity: 1}, 1000);
+    $("p.info").html("Um \"Vier Gewinnt\" spielen zu können, wähle zuerst deinen Namen.");
 
-	    $("#logOnPlay").on("click", function(e) {
-	    	e.preventDefault();
-	        
-	        var msg = "";
-	        var $_logOn = $("#logOnText");
-	        var logOnLength = $_logOn.val().length;
-	        
-	        if( logOnLength == 0 )
-	            msg = "Bitte geben Sie zuerst Ihren Namen ein.";
-	        else {
-	            if( logOnLength < 5 )
-	                msg = "Bitte wählen Sie einen Namen mit mehr als 5 Zeichen.";
-	            if( logOnLength > 20 )
-	                msg = "Bitte wählen Sie einen Namen mit weniger als 20 Zeichen.";
-	        }
+    $("#logOnPlay").on("click", function(e) {
+    	e.preventDefault();
+        
+      var msg = "";
+      var $_logOn = $("#logOnText");
+      var logOnLength = $_logOn.val().length;
+        
+      if( logOnLength == 0 )
+        msg = "Bitte geben Sie zuerst Ihren Namen ein.";
+      else {
+        if( logOnLength < 5 )
+          msg = "Bitte wählen Sie einen Namen mit mehr als 5 Zeichen.";
+        if( logOnLength > 20 )
+          msg = "Bitte wählen Sie einen Namen mit weniger als 20 Zeichen.";
+      }
 
-	        if( msg.length == 0) {
-	            $("p.error").html("");
-	            $("p.error").hide();
-	            // call second stage
-	            player_name = $_logOn.val()
-	    		console.log("trying to set new player name " + player_name);
-	    		/* socket.emit("set player name", player_name);
-	    		socket.on("set player name successful", function() { */
-	    			viewPlayers( false );
-	    		/* }); 
-	    		socket.on("set player name failed", function() {
-	    			showError( "Interner Fehler" );
-	    		});*/
-	            
-	        } else {
-	            showError( msg );
-	        }
-	        bounceInterval = setInterval( function() {
+      if( msg.length == 0) {
+        $("p.error").html("");
+        $("p.error").hide();
+        // call second stage
+        player_name = $_logOn.val()
+  			console.log("trying to set new player name " + player_name);
+  			socket.emit("set name", player_name);
+				viewPlayers( false );
+      } else {
+        showError( msg );
+      }
+      bounceInterval = setInterval( function() {
 				$("#player1").effect("bounce", { times:3 }, 600);
 			}, 1500);
-	    }); 
+    }); 
 	}
-
-	// var oldData = [];
 
 	viewPlayers = function( replay ) {
 		if( !replay ) {
-	        show(".mainLogOn", ".mainStart", function() {
-	        	$("p.info").html("Wähle einen Spieler aus, den du in 4-Gewinnt besiegen möchtest!<br/>Du bist angemeldet als <b>" + player_name + "</b>.");
-	        });
-	    } else {
-	    	initFourInANode();
-	    	show(".mainPlayground", ".mainStart", function() {
-	        	$("p.info").html("Wähle einen Spieler aus, den du in 4-Gewinnt besiegen möchtest!<br/>Du bist angemeldet als <b>" + player_name + "</b>.");
-	        	$(".popup").css("display", "none");
-	        });
-	    }
+      show(".mainLogOn", ".mainStart", function() {
+ 		   	$("p.info").html("Wähle einen Spieler aus, den du in 4-Gewinnt besiegen möchtest!<br/>Du bist angemeldet als <b>" + player_name + "</b>.");
+    	});
+    } else {
+    	initFourInANode();
+    	show(".mainPlayground", ".mainStart", function() {
+      	$("p.info").html("Wähle einen Spieler aus, den du in 4-Gewinnt besiegen möchtest!<br/>Du bist angemeldet als <b>" + player_name + "</b>.");
+      	$(".popup").css("display", "none");
+      });
+    }
 
-	    /* console.log("trying to start game");
+    console.log("trying to start game");
 
-	    socket.emit("start searching opponents");
+    socket.emit("start broadcast");
 
-	    socket.on("update opponent list", function( data ) { 
+    socket.on("update Opponents", function( data ) { 
 
-	      newData = $.extend(true, [], data);
+      newData = $.extend(true, [], data);
+      for( var i = 0; i < oldData.length; ++i) {
+      	oldData[i].checked = false;
+      }
 
-	      for( var i = 0; i < oldData.length; ++i) {
-	      	oldData[i].checked = false;
-	      }
+      for ( var i=0; i<newData.length; i++ ) {
+      	for ( var j=0; j<oldData.length; j++) {
+      		if( newData[i].ip == oldData[j].ip ) {
+      			if(oldData[j].clientname == newData[i].clientname) {
+      				newData[i].checked = true;
+      				oldData[j].checked = true;
+      			} else {
+      				newData[i].checked = false;
+      				oldData[j].checked = false;      				
+      			}
+      			//oldData[j].clientname = newData[i].clientname;
+      		}
 
-	      for ( var i=0; i<newData.length; i++ ) {
-	      	for ( var j=0; j<oldData.length; j++) {
-	      		if( newData[i].ip == oldData[j].ip ) {
-	      			oldData[j].clientname = newData[i].clientname;
-	      			newData[i].checked = true;
-	      			oldData[j].checked = true;
-	      		}
-	      	}
-	      }
+      	}
+      }
 
-	      for( var i=0; i<oldData.length; i++) {
-	      	if( oldData[i].checked != true ) {
-	      		// remove
-	      		$("li[data-ip='" + oldData[i].ip + "']").animate({opacity:0}, 500, function() {$(this).remove();});
-	      		oldData.splice(i,1);
-	      	}
-	      }
+      for( var i=0; i<oldData.length; i++) {
+      	if( oldData[i].checked != true ) {
+      		// remove
+      		$("li[data-ip='" + oldData[i].ip + "']").animate({opacity:0}, 500, function() {$(this).remove();});
+      		oldData.splice(i,1);
+      	}
+      }
 
-	      for( var i=0; i < newData.length; i++) {
-	      	if( newData[i].checked != true ) {
-	      		// add 
-	      		if($("ul#playerList").children().length > 0) {
-	      			$("ul#playerList").append('<li data-ip="' + newData[i].ip + '"><a href="#" class="button toPlayground"><span>Play</span></a><div class="player">' + newData[i].clientname + '</div></li>');
-	      			$("ul#playerList").children().last().animate({opacity:1}, 1000);
-	      		} else
-	      			$("ul#playerList").html('<li data-ip="' + newData[i].ip + '"><a href="#" class="button toPlayground"><span>Play</span></a><div class="player">' + newData[i].clientname + '</div></li>')
-	      				.children().animate({opacity:1}, 1000);
-	      		oldData.push( newData[i] );
-	      	}
+      for( var i=0; i < newData.length; i++) {
+      	if( newData[i].checked != true ) {
+      		// add 
+      		if($("ul#playerList").children().length > 0) {
+      			$("ul#playerList").append('<li data-ip="' + newData[i].ip + '"><a href="#" class="button toPlayground"><span>Play</span></a><div class="player">' + newData[i].clientname + '</div></li>');
+      			$("ul#playerList").children().last().animate({opacity:1}, 1000);
+      		} else
+      			$("ul#playerList").html('<li data-ip="' + newData[i].ip + '"><a href="#" class="button toPlayground"><span>Play</span></a><div class="player">' + newData[i].clientname + '</div></li>')
+      				.children().animate({opacity:1}, 1000);
+      		oldData.push( newData[i] );
+      	}
 
-	      }
+      }
 
-	      socket.on("incoming request", function( data ) {
-	      	console.log( data );
-	      	$(".popup").html("<h2>\"" +  $(this).find(".player").text() + '\" würde gerne mit dir spielen.</h2><a href="#" class="button replay_yes" id="logOnPlay"><span>Ja</span></a><a href="#" class="button replay_no" id="logOnPlay"><span>Nein</span></a>');
-            $(".popup").css("display", "block");
-            $(".popup").animate({opacity:1}, 1000);
-	      	
-	      }); */
+      socket.on("incoming request", function( data ) {
 
-	      /* $("#playerList li").each(function() {
-	          $(this).click( function(e) {
-	            e.preventDefault();
-	            console.log("play with: " + "{clientname: " + $(this).find(".player").text() + ", ip: " + $(this).data("ip") + "}");
-	            socket.emit("play with", {clientname: $(this).find(".player").text(), ip: $(this).data("ip")});
-	            $(".popup").html("<h2>Waiting for \"" +  $(this).find(".player").text() + "\"</h2>");
-	            $(".popup").css("display", "block");
-	            $(".popup").animate({opacity:1}, 1000);
-	            socket.on("play request accepted", function( data ) {
-	            	initFourInANode();
-	            	//popup reseten
-	            	$(".popup").css("display", "none");
-	            	$(".popup").animate({opacity:0}, 500);
-	            	startPlayground( false );
-	            });
-	          });
-	      }
-	    });*/
+      	console.log( data );
+      	$(".popup").html("<h2>\"" +  data.clientname + 
+      		'\" würde gerne mit dir spielen.</h2><a href="#" class="button accept_game_request" id="logOnPlay">' + 
+      		'<span>Annehmen</span></a><a href="#" class="button reject_game_request" id="logOnPlay"><span>Ablehnen</span></a>');
+        $(".popup").css("display", "block");
+        $(".popup").animate({opacity:1}, 1000);
+
+        $(".reject_game_request").click(function() {
+      		$(".popup").css("display", "none");
+        	$(".popup").animate({opacity: 0}, 1000);
+        	socket.emit("start broadcast");
+      	});
+
+        $(".accept_game_request").click(function() {
+        	socket.emit("incoming request accept");
+        	socket.on("incoming request verified", function() {
+        		socket.emmit("ready for game");
+        		socket.on("start game", function() {
+        			startPlayground( false );
+        		});
+        	}); 	
+      	});
+      });
+
+      $("#playerList li").each(function() {
+        $(this).click( function(e) {
+          e.preventDefault();
+          console.log("send request: " + "{clientname: " + $(this).find(".player").text() + ", ip: " + $(this).data("ip") + "}");
+          socket.emit("send request", {clientname: $(this).find(".player").text(), ip: $(this).data("ip")});
+          $(".popup").html("<h2>Waiting for \"" +  $(this).find(".player").text() + "\"</h2>");
+          $(".popup").css("display", "block");
+          $(".popup").animate({opacity:1}, 1000);
+          socket.on("request accepted", function( data ) {
+          	initFourInANode();
+          	//popup reseten
+          	$(".popup").css("display", "none");
+          	$(".popup").animate({opacity:0}, 500);
+          	startPlayground( false );
+          });
+        });
+    	});
+    });
+  }
 	  
-	    $(".toPlayground").live("click", function() {
+	    /* $(".toPlayground").live("click", function() {
 	        opponent_name = $(this).next().text();
 	        console.log("send game request");
 	        // socket.emit("send game request", opponent_name);
@@ -174,7 +192,7 @@ $(document).ready(function() {
 	        startPlayground( false );
 	        
 	    });
-	}
+	}*/
 
 	startPlayground = function( replay ) {
 		if(!replay) {
@@ -698,5 +716,11 @@ $(document).ready(function() {
     });
 
 	 $("div, document, canvas").click(function(e){e.preventDefault();});
+
+	 socket.on("timeout", function() {
+	 	$(".mainLogOn, .mainStart, .mainPlayground, .mainAbout, .mainClose, .popup").css({opacity: 0, display: "none"});
+	 	$(".mainStart").css({opacity: 1, display: "block"});
+	 	socket.emit("start broadcast");
+	 });
 
 });
