@@ -67,6 +67,7 @@ io.sockets.on('connection', function (socket) {
   timeoutInterval = 0;
   turnTimeoutInterval = 0;
   error = 0;
+  LASTMSG = null;
   var TURN = -1;
   var OPPONENTS = [];
   var OPPONENT = {clientname: "asdf", ip: "0", keepalive: GLOBAL.TIMEOUT, starts: false, turntimeout: GLOBAL.TURNTIMEOUT};
@@ -454,6 +455,8 @@ Ich schicke Zug 2:
       if ( incoming == true && lastturn == 0 ) {
         var msg = new Buffer( JSON.stringify(GLOBAL.messages.ready()) );
         server.send(msg, 0, msg.length, GLOBAL.PORT, OPPONENT.ip);
+      } else {
+        server.send(LASTMSG, 0, LASTMSG.length, GLOBAL.PORT, OPPONENT.ip);
       }
     }, GLOBAL.FREQUENCY);
 
@@ -468,6 +471,7 @@ Ich schicke Zug 2:
 
           console.log("asjhdashfksdjhfjksdhfjksdfhsdjkh " + lastturn);
           var msg = new Buffer(JSON.stringify(GLOBAL.messages.turn(clmn, lastturn)));
+          LASTMSG = msg;
           console.log("============ OUTOING TURN");
           console.log(msg);
           server.send(msg, 0, msg.length, GLOBAL.PORT, OPPONENT.ip);
