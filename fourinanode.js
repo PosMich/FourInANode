@@ -499,13 +499,11 @@ Ich schicke Zug 2:
             if ( validateMessage( msg, GLOBAL.messages.turn(0,0)) == true ) {
               console.log("/\\/\\/\\ valid turn message --> update timeout");
               OPPONENT.keepalive = GLOBAL.TIMEOUT;
-              OPPONENT.turntimeout = GLOBAL.TURNTIMEOUT;
             }
           } else {
             console.log("/\\/\\/\\ incoming == false");
             if ( validateMessage(msg, GLOBAL.messages.ready()) == true ) {
               OPPONENT.keepalive = GLOBAL.TIMEOUT;
-              OPPONENT.turntimeout = GLOBAL.TURNTIMEOUT;
               console.log("/\\/\\/\\ ready msg received --> update timeout");
             } else if ( validateMessage(msg, GLOBAL.messages.turn(0,0)) == true && msg.turn == TURN) {
               OPPONENT.keepalive = GLOBAL.TIMEOUT;
