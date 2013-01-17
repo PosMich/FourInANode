@@ -389,8 +389,9 @@ $(document).ready(function() {
 				field_occupied[i + "_" + j] = false;
 				content[i + "_" + j]='';
 				$( "#canvas"+i+"_"+j )[0].width = $( "#canvas"+i+"_"+j )[0].width;
+				$("#canvas" + i + "_" + col).css("background-color", "#fefefe");
+				$("#canvas" + i + "_" + col).css("border-color", "#c8c8c8");
 			}
-			//resetCanvas( "canvas0_"+j );
 		} 
 	};
 
@@ -470,6 +471,10 @@ $(document).ready(function() {
 		e.preventDefault();
 		if( turnEnabled ) {
 			colNumber = $(this).data("col");
+			for(var i = 1; i < 8; i++) {
+				$("#canvas" + i + "_" + colNumber).css("background-color", "#fefefe");
+				$("#canvas" + i + "_" + col).css("border-color", "#c8c8c8");
+			}
 			socket.emit("turn", colNumber)
 			$("#hoverCanvas").remove();
 			setPoint( colNumber );
