@@ -327,7 +327,8 @@ Stage 2 "incoming request"
       try {
         var msg = JSON.parse(msg);
         // if i begin
-        if (validateMessage( msg, GLOBAL.messages.ready()) == true && OPPONENT.starts == false && rinfo.address == OPPONENT.ip) {
+        if (validateMessage( msg, GLOBAL.messages.ready()) == true 
+          && rinfo.address == OPPONENT.ip) {
           // ready verfified, start game
           //clearInterval(timeoutInterval);
           OPPONENT.keepalive = GLOBAL.TIMEOUT;
@@ -432,6 +433,8 @@ Ich schicke Zug 2:
   lastturn = 2
   TURN = 3
 
+  
+
   expected:
     msg.turn == TURN
 
@@ -492,6 +495,7 @@ Ich schicke Zug 2:
             if ( validateMessage( msg, GLOBAL.messages.turn(0,0)) == true ) {
               console.log("/\\/\\/\\ valid turn message --> update timeout");
               OPPONENT.keepalive = GLOBAL.TIMEOUT;
+              OPPONENT.turntimeout = GLOBAL.TURNTIMEOUT;
             }
           } else {
             console.log("/\\/\\/\\ incoming == false");
@@ -499,6 +503,10 @@ Ich schicke Zug 2:
               OPPONENT.keepalive = GLOBAL.TIMEOUT;
               OPPONENT.turntimeout = GLOBAL.TURNTIMEOUT;
               console.log("/\\/\\/\\ ready msg received --> update timeout");
+            } else if ( validateMessage(msg, GLOBAL.messages.turn(0,0)) == true && msg.turn == TURN) {
+              OPPONENT.keepalive = GLOBAL.TIMEOUT;
+              OPPONENT.turntimeout = GLOBAL.TURNTIMEOUT;
+              turnHandler(msg.column, true);
             }
           }
         } else {
@@ -506,10 +514,21 @@ Ich schicke Zug 2:
           if ( incoming == true ) {
             console.log("/\\/\\/\\ incoming == true");
             if ( validateMessage( msg, GLOBAL.messages.turn(0,0)) == true && msg.turn == lastturn) {
-              
+              OPPONENT.keepalive = GLOBAL.TIMEOUT;
+              OPPONENT.turntimeout = GLOBAL.TURNTIMEOUT;
+              console.log("/\\/\\/\\ last turn received --> update timeout");
             }
           } else {
             console.log("/\\/\\/\\ incoming == false");
+            if ( validateMessage( msg, GLOBAL.messages.turn(0,0)) == true && msg.turn == (lastturn-1) ) {
+              OPPONENT.keepalive = GLOBAL.TIMEOUT;
+              OPPONENT.turntimeout = GLOBAL.TURNTIMEOUT;
+              console.log("/\\/\\/\\ last turn -1 received --> update timeout");
+            } else if ( validateMessage(msg, GLOBAL.messages.turn(0,0)) == true && msg.turn == TURN ) {
+              OPPONENT.keepalive = GLOBAL.TIMEOUT;
+              OPPONENT.turntimeout = GLOBAL.TURNTIMEOUT;
+              turnHandler(msg.column, true);
+            }
           }
         }
 
