@@ -461,7 +461,7 @@ Ich schicke Zug 2:
       if ( incoming == true && lastturn == 0 ) {
         var msg = new Buffer( JSON.stringify(GLOBAL.messages.ready()) );
         server.send(msg, 0, msg.length, GLOBAL.PORT, OPPONENT.ip);
-      } else if ( lastturn > 0 ){
+      } else if ( lastturn > 0 && LASTMSG != null ){
         server.send(LASTMSG, 0, LASTMSG.length, GLOBAL.PORT, OPPONENT.ip);
       }
     }, GLOBAL.FREQUENCY);
@@ -526,7 +526,6 @@ Ich schicke Zug 2:
             console.log("/\\/\\/\\ incoming == true");
             if ( validateMessage( msg, GLOBAL.messages.turn(0,0)) == true && msg.turn == lastturn) {
               OPPONENT.keepalive = GLOBAL.TIMEOUT;
-              OPPONENT.turntimeout = GLOBAL.TURNTIMEOUT;
               console.log("/\\/\\/\\ last turn received --> update timeout");
             }
           } else {
@@ -534,7 +533,6 @@ Ich schicke Zug 2:
             if ( (validateMessage( msg, GLOBAL.messages.turn(0,0)) == true && msg.turn == (lastturn-1) ) 
               || (validateMessage( msg, GLOBAL.messages.ready())== true && lastturn == 0) ) {
               OPPONENT.keepalive = GLOBAL.TIMEOUT;
-              OPPONENT.turntimeout = GLOBAL.TURNTIMEOUT;
               console.log("/\\/\\/\\ last turn -1 received --> update timeout");
             } else if ( validateMessage(msg, GLOBAL.messages.turn(0,0)) == true && msg.turn == TURN ) {
               OPPONENT.keepalive = GLOBAL.TIMEOUT;
