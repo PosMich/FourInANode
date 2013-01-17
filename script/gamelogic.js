@@ -389,8 +389,8 @@ $(document).ready(function() {
 				field_occupied[i + "_" + j] = false;
 				content[i + "_" + j]='';
 				$( "#canvas"+i+"_"+j )[0].width = $( "#canvas"+i+"_"+j )[0].width;
-				$("#canvas" + i + "_" + col).css("background-color", "#fefefe");
-				$("#canvas" + i + "_" + col).css("border-color", "#c8c8c8");
+				$("#canvas" + i + "_" + j).css("background-color", "#fefefe");
+				$("#canvas" + i + "_" + j).css("border-color", "#c8c8c8");
 			}
 		} 
 	};
