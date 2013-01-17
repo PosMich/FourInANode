@@ -443,11 +443,7 @@ Ich schicke Zug 2:
 
 
 */
-    function clearTimeouts() {
-      clearTimeout( timeInt );
-      clearInterval( timeoutInterval );
-      clearInterval( turnTimeoutInterval );
-    }
+
 
     clearTimeouts();
 
@@ -577,8 +573,13 @@ Ich schicke Zug 2:
       }
     });
   });
-
+  function clearTimeouts() {
+    clearTimeout( timeInt );
+    clearInterval( timeoutInterval );
+    clearInterval( turnTimeoutInterval );
+  }
   socket.on("error", function() {
+    clearTimeouts();
     error = setInterval(function() {
       var msg = new Buffer(JSON.stringify(GLOBAL.messages.abort()));
       for(var i = 0; i < GLOBAL.ERRORFREQ; i++)
