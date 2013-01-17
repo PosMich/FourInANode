@@ -336,8 +336,8 @@ Stage 2 "incoming request"
           OPPONENT.keepalive = GLOBAL.TIMEOUT;
           TURN = 0;
           socket.emit("start game");
-          clearTimeout(timeInt);
-          timeInt = setTimeout(function() { socket.emit("turn timeout");} ,  GLOBAL.TURNTIMEOUT*1000);
+          if  (timeInt == null )
+            timeInt = setTimeout(function() { socket.emit("turn timeout");} ,  GLOBAL.TURNTIMEOUT*1000);
         } else if (validateMessage( msg, GLOBAL.messages.turn(0,0)) == true 
             && OPPONENT.starts == true
             && TURN == msg.turn
@@ -443,7 +443,7 @@ Ich schicke Zug 2:
 
 
 */
-
+    clearTimeout( timeInt );
     clearInterval( timeoutInterval );
     clearInterval( turnTimeoutInterval );
     
