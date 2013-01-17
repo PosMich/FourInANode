@@ -2,28 +2,27 @@
 	
 $(document).ready(function() {
 
-	var socket = io.connect('http://localhost:8080');
-	var content = [];
-	var turn = 0;
-	var theCanvas = null;
-	var c = null;
-	var context = null;
-	var replay = true;
-	var field_occupied = [];
-	var freeField = true;
-	var player_name = "";
-	var opponent_name = "";
-	var enabled = true;
-	var oldData = [];
-	var turnEnabled = true;
-	var turnOffset = 0;
+	socket = io.connect('http://localhost:8080');
+	content = [];
+	turn = 0;
+	theCanvas = null;
+	c = null;
+	context = null;
+	field_occupied = [];
+	freeField = true;
+	player_name = "";
+	opponent_name = "";
+	enabled = true;
+	oldData = [];
+	turnEnabled = true;
+	turnOffset = 0;
 	animationActive = false;
 	bounceInterval = null;
 
 	//Variables for Pictures
-	var arrow = new Image();
-	var arrow2 = new Image();
-	var cross = new Image();
+	arrow = new Image();
+	arrow2 = new Image();
+	cross = new Image();
 	arrow.src = 'img/Arrow2.png';
 	arrow2.src = 'img/Arrow.png';
 	cross.src = 'img/x.png';
@@ -627,10 +626,24 @@ $(document).ready(function() {
 	}
 
 	initFourInANode = function() {
-		content = new Array();
-		field_occupied = new Array();
-		freeField = false;
+
+		content = [];
 		turn = 0;
+		theCanvas = null;
+		c = null;
+		context = null;
+		field_occupied = [];
+		freeField = true;
+		player_name = "";
+		opponent_name = "";
+		enabled = true;
+		oldData = [];
+		turnEnabled = true;
+		turnOffset = 0;
+		animationActive = false;
+		bounceInterval = null;
+
+
 		$('.player1').css('font-weight','bold');
 		
 		initField();
