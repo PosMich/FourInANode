@@ -338,7 +338,6 @@ Stage 2 "incoming request"
             && OPPONENT.starts == true
             && TURN == msg.turn
             && rinfo.address == OPPONENT.ip ) {
-          clearInterval(timeoutInterval);
           TURN = 0;
           turnHandler(msg.column, true);
         }
@@ -451,6 +450,11 @@ Ich schicke Zug 2:
         clearInterval( turnTimeoutInterval );
         socket.emit("timeout");
       }
+
+      if ( incoming == true && lastturn == 0 ) {
+        var msg = new Buffer( JSON.stringify(GLOBAL.messages.ready()) );
+        server.send(msg, 0, msg.length, GLOBAL.PORT, OPPONENT.ip);
+      }
     }, GLOBAL.FREQUENCY);
 
     if ( incoming==false ) {
@@ -490,7 +494,7 @@ Ich schicke Zug 2:
         console.log("/\\/\\/\\ INCOMING MSG FROM OPPONENT");
         if ( lastturn == 0 ) {
           console.log("/\\/\\/\\ lastturn == 0");
-          if ( incoming = true ) {
+          if ( incoming == true ) {
             console.log("/\\/\\/\\ incoming == true");
             if ( validateMessage( msg, GLOBAL.messages.turn(0,0)) == true ) {
               console.log("/\\/\\/\\ valid turn message --> update timeout");
@@ -520,13 +524,15 @@ Ich schicke Zug 2:
             }
           } else {
             console.log("/\\/\\/\\ incoming == false");
-            if ( validateMessage( msg, GLOBAL.messages.turn(0,0)) == true && msg.turn == (lastturn-1) ) {
+            if ( (validateMessage( msg, GLOBAL.messages.turn(0,0)) == true && msg.turn == (lastturn-1) ) 
+              || (validateMessage( msg, GLOBAL.messages.ready())== true && lastturn == 0) ) {
               OPPONENT.keepalive = GLOBAL.TIMEOUT;
               OPPONENT.turntimeout = GLOBAL.TURNTIMEOUT;
               console.log("/\\/\\/\\ last turn -1 received --> update timeout");
             } else if ( validateMessage(msg, GLOBAL.messages.turn(0,0)) == true && msg.turn == TURN ) {
               OPPONENT.keepalive = GLOBAL.TIMEOUT;
               OPPONENT.turntimeout = GLOBAL.TURNTIMEOUT;
+              console.log("/\\/\\/\\ TURN received --> update timeout, turnHandler !!!!");
               turnHandler(msg.column, true);
             }
           }
