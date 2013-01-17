@@ -250,7 +250,7 @@ Stage 2 "incoming request"
         var msg = JSON.parse(msg);
         if (validateMessage( msg, GLOBAL.messages.request()) == true && OPPONENT.ip == rinfo.address ) {
 
-          if (msg.clientname == OPPONENT.clientname)
+          if (rinfo.address == OPPONENT.ip)
             OPPONENT.keepalive = GLOBAL.TIMEOUT;
         } else if (validateMessage(msg, GLOBAL.messages.ready()) == true && OPPONENT.ip == rinfo.address ){
           clearInterval(timeoutInterval);
@@ -329,7 +329,8 @@ Stage 2 "incoming request"
         // if i begin
         if (validateMessage( msg, GLOBAL.messages.ready()) == true && OPPONENT.starts == false && rinfo.address == OPPONENT.ip) {
           // ready verfified, start game
-          clearInterval(timeoutInterval);
+          //clearInterval(timeoutInterval);
+          OPPONENT.keepalive = GLOBAL.TIMEOUT;
           TURN = 0;
           socket.emit("start game");
         } else if (validateMessage( msg, GLOBAL.messages.turn(0,0)) == true 
@@ -356,7 +357,90 @@ Stage 2 "incoming request"
     console.log("=============================== last turn:");
     console.log(lastturn);
 
+/*
+
+Gegner schickt Zug 0:
+  incoming = true
+  lastturn = 0
+  TURN = 1
+
+  ////
+
+  was passiert:
+    keepalive timeout falls er innerhalb 10 sek nichts schickt
+
+  expected:
+    msg.turn == lastturn
+
+Ich schicke Zug 1:
+  incoming = false
+  lastturn = 1
+  TURN = 2
+
+  last msg = zug 0
+
+  was passiert:
+    msg wird gesendet
+    turntimeout falls innerhalb 30 nichts passiert  --> wenn msg.turn != TURN
+    keepalive timeout falls er innerhalb 10 sek nichts schickt  -->> wenn msg.turn != lastturn
+
+  expected:
+    msg.turn == TURN
+
+Gegner schickt Zug 2:
+  incoming = true;
+  lastturn = 2
+  TURN = 3
+
+  last msg = zug 2
+
+  was passiert:
+    keepalive timeout falls er innerhalb 10 sek nichts schickt  --> msg.turn != lastturn
+
+  expected:
+    msg.turn == lastturn
+
+-----------------------------
+Ich schicke Zug 0:
+  incoming = false;
+  lastturn = 0
+  TURN = 1
+
+  last msg = ready
+
+  was passiert:
+    msg wird gesendet
+    turntimeout falls innerhalb 30 nichts passiert  --> msg == msg.ready
+    keepalive timeout falls er innerhalb 10 sek nichts schickt  --> msg == msg.ready
+
+  expected:
+    msg mit msg.turn == TURN
+
+Gegner schickt Zug 1:
+  incoming = true
+  lastturn = 1
+  TURN = 2
+
+  was passiert:
+    keepalive timeout falls er innerhalb 10 sek nichts schickt  --> msg.turn != lastturn
+
+  expected:
+    msg mit msg.turn == TURN
+
+Ich schicke Zug 2:
+  incoming = false
+  lastturn = 2
+  TURN = 3
+
+  expected:
+    msg.turn == TURN
+
+
+*/
+
     clearInterval( timeoutInterval );
+    clearInterval( turnTimeoutInterval );
+    
     timeoutInterval = setInterval(function() {
       OPPONENT.keepalive  -= GLOBAL.FREQUENCY/1000;
       if ( OPPONENT.keepalive <= 0 ) {
@@ -366,24 +450,22 @@ Stage 2 "incoming request"
       }
     }, GLOBAL.FREQUENCY);
 
-    clearInterval( turnTimeoutInterval );
-    turnTimeoutInterval = setInterval(function() {
-      OPPONENT.turntimeout -= GLOBAL.FREQUENCY/1000;
-      if ( OPPONENT.turntimeout <= 0 ) {
-        clearInterval(timeoutInterval);
-        clearInterval(turnTimeoutInterval);
-        socket.emit("turn timeout");
-      }
+    if ( incoming==false ) {
+      turnTimeoutInterval = setInterval(function() {
+        OPPONENT.turntimeout -= GLOBAL.FREQUENCY/1000;
+        if ( OPPONENT.turntimeout <= 0 ) {
+          clearInterval(timeoutInterval);
+          clearInterval(turnTimeoutInterval);
+          socket.emit("turn timeout");
+        }
 
-      if (incoming == false) {
-        console.log("asjhdashfksdjhfjksdhfjksdfhsdjkh " + lastturn);
-        var msg = new Buffer(JSON.stringify(GLOBAL.messages.turn(clmn, lastturn)));
-        console.log("============ OUTOING TURN");
-        console.log(msg);
-        server.send(msg, 0, msg.length, GLOBAL.PORT, OPPONENT.ip);
-      }
-    }, GLOBAL.FREQUENCY);
-
+          console.log("asjhdashfksdjhfjksdhfjksdfhsdjkh " + lastturn);
+          var msg = new Buffer(JSON.stringify(GLOBAL.messages.turn(clmn, lastturn)));
+          console.log("============ OUTOING TURN");
+          console.log(msg);
+          server.send(msg, 0, msg.length, GLOBAL.PORT, OPPONENT.ip);
+      }, GLOBAL.FREQUENCY);
+    }
 
     if (incoming == true) {
       console.log("============ INCOMING TURN");
@@ -399,24 +481,38 @@ Stage 2 "incoming request"
 
       try {
         var msg = JSON.parse(msg);
-        if (validateMessage( msg, GLOBAL.messages.turn(0,0)) == true) {
-          if ( rinfo.address == OPPONENT.ip ) {            
-            if ( incoming == false && msg.turn == TURN ) {
-              clearInterval(timeoutInterval);
-              clearInterval(turnTimeoutInterval);
-              turnHandler( msg.column, true);
-            }
-            if( incoming == true && msg.turn == lastturn || incoming == false && msg.turn == lastturn-1 ) {
-              console.log("did it!!!!!");
+        if (OPPONENT.ip != rinfo.address)
+          return;
+
+        console.log("/\\/\\/\\ INCOMING MSG FROM OPPONENT");
+        if ( lastturn == 0 ) {
+          console.log("/\\/\\/\\ lastturn == 0");
+          if ( incoming = true ) {
+            console.log("/\\/\\/\\ incoming == true");
+            if ( validateMessage( msg, GLOBAL.messages.turn(0,0)) == true ) {
+              console.log("/\\/\\/\\ valid turn message --> update timeout");
               OPPONENT.keepalive = GLOBAL.TIMEOUT;
             }
+          } else {
+            console.log("/\\/\\/\\ incoming == false");
+            if ( validateMessage(msg, GLOBAL.messages.ready()) == true ) {
+              OPPONENT.keepalive = GLOBAL.TIMEOUT;
+              OPPONENT.turntimeout = GLOBAL.TURNTIMEOUT;
+              console.log("/\\/\\/\\ ready msg received --> update timeout");
+            }
           }
-        } else if( validateMessage(msg, GLOBAL.messages.ready()) == true) {
-          console.log("LASTTURN " + lastturn);
-          console.log("ACTIVE TURN " + TURN);
-          console.log("did it!!!!!");
-          OPPONENT.keepalive = GLOBAL.TIMEOUT;
+        } else {
+            console.log("/\\/\\/\\ lastturn > 0");
+          if ( incoming == true ) {
+            console.log("/\\/\\/\\ incoming == true");
+            if ( validateMessage( msg, GLOBAL.messages.turn(0,0)) == true && msg.turn == lastturn) {
+              
+            }
+          } else {
+            console.log("/\\/\\/\\ incoming == false");
+          }
         }
+
       } catch (err) {
         console.log("err: " + err);
       }
