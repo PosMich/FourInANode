@@ -66,6 +66,7 @@ io.sockets.on('connection', function (socket) {
   interval = null;
   timeoutInterval = 0;
   turnTimeoutInterval = 0;
+  timeInt = null;
   error = 0;
   LASTMSG = null;
   var TURN = -1;
@@ -335,6 +336,8 @@ Stage 2 "incoming request"
           OPPONENT.keepalive = GLOBAL.TIMEOUT;
           TURN = 0;
           socket.emit("start game");
+          clearTimeout(timeInt);
+          timeInt = setTimeout(function() { socket.emit("turn timeout");} ,  GLOBAL.TURNTIMEOUT*1000);
         } else if (validateMessage( msg, GLOBAL.messages.turn(0,0)) == true 
             && OPPONENT.starts == true
             && TURN == msg.turn
@@ -455,7 +458,7 @@ Ich schicke Zug 2:
       if ( incoming == true && lastturn == 0 ) {
         var msg = new Buffer( JSON.stringify(GLOBAL.messages.ready()) );
         server.send(msg, 0, msg.length, GLOBAL.PORT, OPPONENT.ip);
-      } else {
+      } else if ( lastturn > 0 ){
         server.send(LASTMSG, 0, LASTMSG.length, GLOBAL.PORT, OPPONENT.ip);
       }
     }, GLOBAL.FREQUENCY);
@@ -582,6 +585,13 @@ Ich schicke Zug 2:
         server.send(msg, 0, msg.length, GLOBAL.PORT, OPPONENT.ip);
     }, GLOBAL.FREQUENCY);
   });
+
+  socket.on("disconnect", function() {
+    console.log("DISCONNECT");
+    clearInterval(timeoutInterval);
+    clearInterval(interval);
+    clearInterval(turnTimeoutInterval);
+  })
 
   function validateMessage( msg, expected ) {
     if ( msg.stage != expected.stage )

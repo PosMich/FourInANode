@@ -28,11 +28,11 @@ $(document).ready(function() {
 	arrow2.src = 'img/Arrow.png';
 	cross.src = 'img/x.png';
 
-	$(".play").on("click", function() {
+	$(".play").one("click", function() {
 	    $(".mainLogOn").css("display", "block");
 	});
 
-	$(".about").on("click", function() {
+	$(".about").one("click", function() {
 	    $(".mainAbout").css("display", "block");
 	});
 
@@ -41,7 +41,7 @@ $(document).ready(function() {
     $(".mainLogOn").animate({opacity: 1}, 1000);
     $("p.info").html("Um \"Vier Gewinnt\" spielen zu können, wähle zuerst deinen Namen.");
 
-    $("#logOnPlay").on("click", function(e) {
+    $("#logOnPlay").one("click", function(e) {
     	e.preventDefault();
         
       var msg = "";
@@ -164,29 +164,34 @@ $(document).ready(function() {
       	});
       });
 
-      $("#playerList li").each(function() {
-        $(this).click( function(e) {
+      $(".toPlayground").each(function() {
+        $(this).off("click");
+        $(this).one("click", function(e) {
           e.preventDefault();
-          console.log("send request: " + "{clientname: " + $(this).find(".player").text() + ", ip: " + $(this).data("ip") + "}");
-          socket.emit("send request", {clientname: $(this).find(".player").text(), ip: $(this).data("ip")});
-          opponent_name = $(this).find(".player").text();
-          $(".popup").html("<h2>Waiting for \"" +  $(this).find(".player").text() + "\"</h2>");
-          $(".popup").css("display", "block");
-          $(".popup").animate({opacity:1}, 1000);
-          socket.removeAllListeners("request accepted");
-          socket.on("request accepted", function( data ) {
-          	socket.emit("ready for game");
-          	socket.removeAllListeners("start game");
-          	socket.on("start game", function() {
-	          	initFourInANode();
-	          	//popup reseten
-	          	$(".popup").css("display", "none");
-	          	$(".popup").animate({opacity:0}, 500);
-	          	startPlayground( true );
-	          });
-          });
+          sendRequest($(this).next("div").html(), $(this).parent().data("ip"));
         });
     	});
+    });
+  }
+
+  sendRequest = function(client, _ip) {
+    console.log("send request: " + "{clientname: " + client + ", ip: " + _ip + "}");
+    socket.emit("send request", {clientname: client, ip: _ip});
+    
+    $(".popup").html("<h2>Waiting for \"" + client + "\"</h2>");
+    $(".popup").css("display", "block");
+    $(".popup").animate({opacity:1}, 1000);
+    socket.removeAllListeners("request accepted");
+    socket.on("request accepted", function( data ) {
+      socket.emit("ready for game");
+      socket.removeAllListeners("start game");
+      socket.on("start game", function() {
+        initFourInANode();
+        //popup reseten
+        $(".popup").css("display", "none");
+        $(".popup").animate({opacity:0}, 500);
+        startPlayground( true );
+      });
     });
   }
 
@@ -603,12 +608,12 @@ $(document).ready(function() {
 			$(".popup").css("display", "block");
 			$(".popup").animate({opacity: 1}, 1000);
 
-			$(".replay_yes").live("click", function() { 
+			$(".replay_yes").one("click", function() { 
 				$(".popup").animate({opacity: 0}, 400);
 				enabled = true;
 				viewPlayers( true );
 			});
-			$(".replay_no").on("click", function() {
+			$(".replay_no").one("click", function() {
 				$(".popup").animate({opacity: 0}, 400);
 				enabled = true;
 				closeFourInANode();
