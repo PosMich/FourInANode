@@ -443,15 +443,18 @@ Ich schicke Zug 2:
 
 
 */
-    clearTimeout( timeInt );
-    clearInterval( timeoutInterval );
-    clearInterval( turnTimeoutInterval );
-    
+    function clearTimeouts() {
+      clearTimeout( timeInt );
+      clearInterval( timeoutInterval );
+      clearInterval( turnTimeoutInterval );
+    }
+
+    clearTimeouts();
+
     timeoutInterval = setInterval(function() {
       OPPONENT.keepalive  -= GLOBAL.FREQUENCY/1000;
       if ( OPPONENT.keepalive <= 0 ) {
-        clearInterval( timeoutInterval );
-        clearInterval( turnTimeoutInterval );
+        setTimeout(function() {clearTimeouts();}, 200);
         socket.emit("timeout");
       }
 
@@ -467,8 +470,7 @@ Ich schicke Zug 2:
       turnTimeoutInterval = setInterval(function() {
         OPPONENT.turntimeout -= GLOBAL.FREQUENCY/1000;
         if ( OPPONENT.turntimeout <= 0 ) {
-          clearInterval(timeoutInterval);
-          clearInterval(turnTimeoutInterval);
+          setTimeout(function() {clearTimeouts();}, 200);
           socket.emit("turn timeout");
         }
 

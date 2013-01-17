@@ -143,21 +143,23 @@ $(document).ready(function() {
         $(".popup").css("display", "block");
         $(".popup").animate({opacity:1}, 1000);
 
-        $(".reject_game_request").click(function() {
+        $(".reject_game_request").one("click",function() {
       		$(".popup").css("display", "none");
         	$(".popup").animate({opacity: 0}, 1000);
         	socket.emit("incoming request decline");
         	socket.emit("start broadcast");
       	});
 
-        $(".accept_game_request").click(function() {
+        $(".accept_game_request").one("click",function() {
+
+            initFourInANode();
+
         	socket.emit("incoming request accept");
         	console.log("incoming request accept");
         	socket.removeAllListeners("incoming request verified");
         	socket.on("incoming request verified", function() {
         		socket.emit("ready for game");
 						console.log("start gaḿe");
-      			initFourInANode();
       			startPlayground( false );
       			turnOffset = 1;
         	}); 	
@@ -175,9 +177,13 @@ $(document).ready(function() {
   }
 
   sendRequest = function(client, _ip) {
+    initFourInANode();
+
     console.log("send request: " + "{clientname: " + client + ", ip: " + _ip + "}");
     socket.emit("send request", {clientname: client, ip: _ip});
-    
+
+    opponent_name = client;
+
     $(".popup").html("<h2>Waiting for \"" + client + "\"</h2>");
     $(".popup").css("display", "block");
     $(".popup").animate({opacity:1}, 1000);
@@ -186,7 +192,6 @@ $(document).ready(function() {
       socket.emit("ready for game");
       socket.removeAllListeners("start game");
       socket.on("start game", function() {
-        initFourInANode();
         //popup reseten
         $(".popup").css("display", "none");
         $(".popup").animate({opacity:0}, 500);
