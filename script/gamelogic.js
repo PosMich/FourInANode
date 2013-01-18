@@ -204,6 +204,7 @@ $(document).ready(function() {
 
       socket.removeAllListeners("turn");
       socket.on("turn", function( data ) {
+        console.log("gotscha");
         setToken( data.column );
       });
     });
@@ -269,20 +270,25 @@ $(document).ready(function() {
   }
 
 	function enableClickAndHoverEvent() {
-		$(".arrows_div canvas, .canvas_div canvas").one( "click", function(e) {
-			e.preventDefault();
-			var column = $(this).data("col");
-			var row = checkForFirstFree( column );
-      socket.emit("turn", column);
-			hoverOut( row, column );
-			setToken( column );
-		});
+		$(".arrows_div canvas, .canvas_div canvas").each( function() {
+      $(this).one( "click", function(e) {
+        console.log("clicked");
+        e.preventDefault();
+        var column = $(this).data("col");
+        var row = checkForFirstFree( column );
+        socket.emit("turn", column);
+        hoverOut( row, column );
+        setToken( column );
+      });
+    });
 
-		$(".arrows_div canvas, .canvas_div canvas").hover(function(e) {
-			hoverOn( $(this).data("col") );
-		}, function(e) {
-			 hoverOut( checkForFirstFree( $(this).data("col") ), $(this).data("col") );
-		});
+		$(".arrows_div canvas, .canvas_div canvas").each( function() {
+      $(thid).hover(function(e) {
+			  hoverOn( $(this).data("col") );
+		  }, function(e) {
+			   hoverOut( checkForFirstFree( $(this).data("col") ), $(this).data("col") );
+		  });
+    });
 	}
 
 	 function hoverOn( column ) {
@@ -341,6 +347,7 @@ $(document).ready(function() {
 
 		if(incomingTurn == true) {
 			draggableTurn();
+      disableClickAndHoverEvent( -1 );
 			enableClickAndHoverEvent();
 			incomingTurn = false;
 		} else {
@@ -646,6 +653,7 @@ $(document).ready(function() {
       console.log("it's a draggable turn");
 			draggableTurn();
       console.log("events are enabled");
+      disableClickAndHoverEvent( -1 );
 			enableClickAndHoverEvent();
       console.log("bounce started");
 			// startBounceInterval( 1 );
