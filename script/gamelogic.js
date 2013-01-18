@@ -274,6 +274,7 @@ $(document).ready(function() {
 			e.preventDefault();
 			var column = $(this).data("col");
 			var row = checkForFirstFree( column );
+      socket.emit("turn", column);
 			hoverOut( row, column );
 			setToken( column );
 		});
