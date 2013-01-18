@@ -283,7 +283,7 @@ $(document).ready(function() {
     });
 
 		$(".arrows_div canvas, .canvas_div canvas").each( function() {
-      $(thid).hover(function(e) {
+      $(this).hover(function(e) {
 			  hoverOn( $(this).data("col") );
 		  }, function(e) {
 			   hoverOut( checkForFirstFree( $(this).data("col") ), $(this).data("col") );
@@ -324,6 +324,7 @@ $(document).ready(function() {
   }
 
 	function setToken( column ) {
+    console.log("===================== INCOMING: " + incomingTurn);
 		/* if (animationActive == true)
       return;
     animationActive = true;
@@ -345,7 +346,7 @@ $(document).ready(function() {
 		printField();
 		checkForWinner( freeFieldSpace, column );
 
-		if(incomingTurn == true) {
+		if( incomingTurn == true ) {
 			draggableTurn();
       disableClickAndHoverEvent( -1 );
 			enableClickAndHoverEvent();
@@ -353,7 +354,7 @@ $(document).ready(function() {
 		} else {
 			$("#player1").draggable("disable");
 			disableClickAndHoverEvent( -1 );
-			incomingTurn == true;
+			incomingTurn = true;
 		}
 
 		/* clearInterval( bounceInterval );
@@ -636,26 +637,30 @@ $(document).ready(function() {
     console.log("players drawed");
 	}
 
+  function resetCanvas() {
+    for( var i = 1; i < 7; i++ ) {
+      for( var j = 1; i < 8; j++ ) {
+        resetCanvas = $("#canvas" + i + "_" + j)[0];
+        resetCanvas.width = resetCanvas.width;
+      }
+    }
+  }
 
 	function initPlayground() {
-    console.log("arrows init");
 		drawArrows();
-    console.log("field init");
 		initField();
-    console.log("init players");
 		initPlayers();
-    console.log()
+    resetCanvas();
+
+    disableClickAndHoverEvent( -1 );
+    console.log("=========================== incomingTurn :: " + incomingTurn);
+
 		if(incomingTurn == true) {
-			disableClickAndHoverEvent( -1 );
 			// $("#player1").draggable( "remove" );
 			// startBounceInterval( 2 );
 		} else {
-      console.log("it's a draggable turn");
 			draggableTurn();
-      console.log("events are enabled");
-      disableClickAndHoverEvent( -1 );
 			enableClickAndHoverEvent();
-      console.log("bounce started");
 			// startBounceInterval( 1 );
 		}
 	}
