@@ -72,7 +72,7 @@ $(document).ready(function() {
         $("p.info").html("Wähle einen Spieler aus, den du in 4-Gewinnt besiegen möchtest!<br/>Du bist angemeldet als <b>" + player_name + "</b>.");
       });
     } else {
-      initFourInANode();
+      // initPlayground();
       show(".mainPlayground", ".mainStart", function() {
         $("p.info").html("Wähle einen Spieler aus, den du in 4-Gewinnt besiegen möchtest!<br/>Du bist angemeldet als <b>" + player_name + "</b>.");
         $(".popup").css("display", "none");
@@ -144,7 +144,7 @@ $(document).ready(function() {
 
         $(".accept_game_request").one("click",function() {
 
-            initFourInANode();
+            initPlayground();
 
           socket.emit("incoming request accept");
           console.log("incoming request accept");
@@ -169,7 +169,7 @@ $(document).ready(function() {
   }
 
   sendRequest = function(client, _ip) {
-    initFourInANode();
+    // initFourInANode();
 
     console.log("send request: " + "{clientname: " + client + ", ip: " + _ip + "}");
     socket.emit("send request", {clientname: client, ip: _ip});
