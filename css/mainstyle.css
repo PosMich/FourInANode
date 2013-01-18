@@ -344,3 +344,11 @@ li {
 #player1 {
 	margin-bottom:30px;
 }
+
+canvas.noBG {
+  background: transparent;
+  position: absolute;
+  border: none;
+  top: 180px;
+  margin-left: -50px;
+}
