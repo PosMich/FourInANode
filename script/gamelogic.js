@@ -143,16 +143,13 @@ $(document).ready(function() {
         });
 
         $(".accept_game_request").one("click",function() {
-
-            initPlayground();
-
           socket.emit("incoming request accept");
           console.log("incoming request accept");
           socket.removeAllListeners("incoming request verified");
           socket.on("incoming request verified", function() {
             socket.emit("ready for game");
             console.log("start gaḿe");
-            startPlayground( false );
+            startPlayground( true );
             turnOffset = 1;
           });   
         });
@@ -187,7 +184,7 @@ $(document).ready(function() {
         //popup reseten
         $(".popup").css("display", "none");
         $(".popup").animate({opacity:0}, 500);
-        startPlayground( true );
+        startPlayground( false );
       });
     });
   }
@@ -195,7 +192,7 @@ $(document).ready(function() {
   startPlayground = function( myTurn ) {
 
   	incomingTurn = myTurn;
-  	initPlayground();
+    initPlayground();
 
     $(".popup").animate({opacity: 0}, 500);
     $(".popup").css("display", "none");
@@ -626,22 +623,31 @@ $(document).ready(function() {
 		opponent_name = "1234";
 		$("span.player1").html(client_name);
 		$("span.player2").html(opponent_name);
+    console.log("drawing players");
 		drawCircle( $("#player1")[0], "#aa0000", "#880000", 15, 15, 10 );
 		drawCircle( $("#player2")[0], '#0000aa', '#000088', 15, 15, 10) ;
+    console.log("players drawed");
 	}
 
 
 	function initPlayground() {
+    console.log("arrows init");
 		drawArrows();
+    console.log("field init");
 		initField();
+    console.log("init players");
 		initPlayers();
+    console.log()
 		if(incomingTurn == true) {
 			disableClickAndHoverEvent();
 			// $("#player1").draggable( "remove" );
 			startBounceInterval( 2 );
 		} else {
+      console.log("it's a draggable turn");
 			draggableTurn();
+      console.log("events are enabled");
 			enableClickAndHoverEvent();
+      console.log("bounce started");
 			startBounceInterval( 1 );
 		}
 	}
