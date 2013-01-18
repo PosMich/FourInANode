@@ -356,11 +356,11 @@ $(document).ready(function() {
 		
 	}
 
-	function startBounceInterval( player ) {
+	/* function startBounceInterval( player ) {
 		bounceInterval = setInterval( function() {
       $("#player" + player).effect("bounce", { times:3 }, 600);
     }, 1500);
-	}
+	} */
 
 	function checkForWinner( lastRow, lastColumn) {
 
@@ -641,14 +641,14 @@ $(document).ready(function() {
 		if(incomingTurn == true) {
 			disableClickAndHoverEvent( -1 );
 			// $("#player1").draggable( "remove" );
-			startBounceInterval( 2 );
+			// startBounceInterval( 2 );
 		} else {
       console.log("it's a draggable turn");
 			draggableTurn();
       console.log("events are enabled");
 			enableClickAndHoverEvent();
       console.log("bounce started");
-			startBounceInterval( 1 );
+			// startBounceInterval( 1 );
 		}
 	}
 
