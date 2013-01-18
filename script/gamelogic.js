@@ -639,7 +639,7 @@ $(document).ready(function() {
 		initPlayers();
     console.log()
 		if(incomingTurn == true) {
-			disableClickAndHoverEvent();
+			disableClickAndHoverEvent( -1 );
 			// $("#player1").draggable( "remove" );
 			startBounceInterval( 2 );
 		} else {
