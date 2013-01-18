@@ -204,8 +204,7 @@ $(document).ready(function() {
 
       socket.removeAllListeners("turn");
       socket.on("turn", function( data ) {
-        setPoint( data.column );
-        turnEnabled = true;
+        setToken( data.column );
       });
     });
   }
@@ -270,7 +269,7 @@ $(document).ready(function() {
   }
 
 	function enableClickAndHoverEvent() {
-		$(".arrows_div canvas, .canvas_div canvas").click( function(e) {
+		$(".arrows_div canvas, .canvas_div canvas").one( "click", function(e) {
 			e.preventDefault();
 			var column = $(this).data("col");
 			var row = checkForFirstFree( column );
@@ -319,12 +318,12 @@ $(document).ready(function() {
   }
 
 	function setToken( column ) {
-		if (animationActive == true)
+		/* if (animationActive == true)
       return;
     animationActive = true;
     if( typeof(bounceInterval) == "undefined" )
       bounceInterval = null;
-    clearInterval( bounceInterval );
+    clearInterval( bounceInterval ); */
 
 		freeFieldSpace = checkForFirstFree( column );
 		// return 1 = last available field - disable events after that
@@ -332,7 +331,7 @@ $(document).ready(function() {
 			disableClickAndHoverEvent( column );
 
 		// set point depending on incoming/outgoing turn
-		(incomingTurn) ? field[freeFieldSpace][column] = 2 : field[freeFieldSpace][column] = 1;
+		field[freeFieldSpace][column] = (incomingTurn) ? 2 : field[freeFieldSpace][column] = 1;
 
 		// start animation
 		animateTokenToDestination( freeFieldSpace, column );
@@ -350,10 +349,10 @@ $(document).ready(function() {
 			incomingTurn == true;
 		}
 
-		clearInterval( bounceInterval );
+		/* clearInterval( bounceInterval );
 		var player = (incomingTurn) ? 1 : 2;
 
-		startBounceInterval( player );
+		startBounceInterval( player ); */
 		
 	}
 
