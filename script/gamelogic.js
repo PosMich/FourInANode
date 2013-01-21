@@ -18,6 +18,7 @@ $(document).ready(function() {
 	turnOffset = 0;
 	animationActive = false;
 	bounceInterval = null;
+  blockSocket = true;
 
 	//Variables for Pictures
 	arrow = new Image();
@@ -157,8 +158,9 @@ $(document).ready(function() {
         	console.log("incoming request accept");
         	socket.removeAllListeners("incoming request verified");
         	socket.on("incoming request verified", function() {
-        		socket.emit("ready for game");
-						console.log("start gaḿe");
+        		blockSocket = true;
+            socket.emit("ready for game");
+						console.log("start game");
       			startPlayground( false );
       			turnOffset = 1;
         	}); 	
@@ -189,12 +191,16 @@ $(document).ready(function() {
     socket.removeAllListeners("request accepted");
     socket.on("request accepted", function( data ) {
       socket.emit("ready for game");
+      blockSocket = false;
       socket.removeAllListeners("start game");
       socket.on("start game", function() {
         //popup reseten
-        $(".popup").css("display", "none");
-        $(".popup").animate({opacity:0}, 500);
-        startPlayground( true );
+        if( blockSocket == false ) {
+          $(".popup").css("display", "none");
+          $(".popup").animate({opacity:0}, 500);
+          blockSocket = true;
+          startPlayground( true );
+        }
       });
     });
   }
