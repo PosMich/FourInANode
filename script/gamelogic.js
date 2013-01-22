@@ -513,6 +513,14 @@ $(document).ready(function() {
 				while( freeField==false && i>0 ) {
 					if( (field_occupied[i + "_" + colNumber] )==false ){
 
+            //To see which field is already occupied with a stone
+            field_occupied[i + "_" + colNumber] = true;
+            content[i + "_" + colNumber] = player_name;
+            
+            turn++;
+            checkWinner(i, colNumber);
+            freeField = true;
+
 						var theCanvas = $("#canvas" + i + "_" + colNumber);	
 						// add new canvas
 						theCanvas.after('<canvas id="canvasTmpCopy' + i + '_' + colNumber + '" class="canvasTmpCopy" width="50" height="50"></canvas>');
@@ -527,21 +535,13 @@ $(document).ready(function() {
 						});
 						
 						$('.player2').css('font-weight','bold');
+            $('.player1').css('font-weight','normal');
 
-           				clearInterval( bounceInterval );
-						bounceInterval = setInterval( function() {
-        					$("#player2").effect("bounce", { times:3 }, 600);
-        				}, 1500);
-
-						$('.player1').css('font-weight','normal');
+     				clearInterval( bounceInterval );
+					    bounceInterval = setInterval( function() {
+    					$("#player2").effect("bounce", { times:3 }, 600);
+    				}, 1500);
 						
-						//To see which field is already occupied with a stone
-						field_occupied[i + "_" + colNumber] = true;
-						content[i + "_" + colNumber] = player_name;
-						
-						turn++;
-						checkWinner(i, colNumber);
-						freeField = true;
 					}
 					i--;
 				}
@@ -562,6 +562,13 @@ $(document).ready(function() {
 				while( freeField==false && i>0 ){
 					if( (field_occupied[i + "_" + colNumber] )==false ){
 
+            content[i + "_" + colNumber] = opponent_name;
+            field_occupied[i + "_" + colNumber]=true;
+            
+            turn++;
+            checkWinner(i, colNumber);
+            freeField = true;
+
 						var theCanvas = $("#canvas" + i + "_" + colNumber);	
 						// add new canvas
 						theCanvas.after('<canvas id="canvasTmpCopy' + i + '_' + colNumber + '" class="canvasTmpCopy" width="50" height="50"></canvas>');
@@ -577,17 +584,10 @@ $(document).ready(function() {
 						$('.player1').css('font-weight','bold');
 						$('.player2').css('font-weight','normal');
 
-           				clearInterval( bounceInterval );
-						bounceInterval = setInterval( function() {
-        					$("#player1").effect("bounce", { times:3 }, 600);
-        				}, 1500);
-						
-						content[i + "_" + colNumber] = opponent_name;
-						field_occupied[i + "_" + colNumber]=true;
-						
-						turn++;
-						checkWinner(i, colNumber);
-						freeField = true;
+     				clearInterval( bounceInterval );
+				   	bounceInterval = setInterval( function() {
+  	   				$("#player1").effect("bounce", { times:3 }, 600);
+    				}, 1500);
 					}
 					i--;
 				}
