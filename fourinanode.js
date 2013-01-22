@@ -63,6 +63,8 @@ io.sockets.on('connection', function (socket) {
   var server     = dgram.createSocket("udp4");
   server.bind(PORT);
 
+  server.setTTL(255);
+  server.setMulticastTTL(255);
   interval = null;
   timeoutInterval = 0;
   turnTimeoutInterval = 0;
