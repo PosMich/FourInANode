@@ -18,7 +18,7 @@ $(document).ready(function() {
 	turnOffset = 0;
 	animationActive = false;
 	bounceInterval = null;
-    blockSocket = true;
+  blockSocket = true;
 
 	//Variables for Pictures
 	arrow = new Image();
@@ -86,6 +86,12 @@ $(document).ready(function() {
 
     console.log("trying to start game");
 
+
+    oldData = [];
+    newData = [];
+
+    $("ul#playerList").empty();
+
     socket.emit("start broadcast");
     socket.removeAllListeners("update Opponents");
     socket.on("update Opponents", function( data ) { 
@@ -143,8 +149,13 @@ $(document).ready(function() {
         $(".reject_game_request").one("click",function() {
       		$(".popup").css("display", "none");
         	$(".popup").animate({opacity: 0}, 1000);
+          oldData = [];
+          newData = [];
+
+          $("ul#playerList").empty();
         	socket.emit("incoming request decline");
         	socket.emit("start broadcast");
+        
       	});
 
         $(".accept_game_request").one("click",function() {
@@ -646,7 +657,8 @@ $(document).ready(function() {
 		/* player_name = "";
 		opponent_name = ""; */
 		enabled = true;
-		oldData = [];
+    oldData = [];
+    newData = [];
 		turnEnabled = true;
 		turnOffset = 0;
 		animationActive = false;
@@ -737,6 +749,10 @@ $(document).ready(function() {
 	 socket.on("timeout", function() {
 	 	$(".mainLogOn, .mainStart, .mainPlayground, .mainAbout, .mainClose, .popup").css({opacity: 0, display: "none"});
 	 	$(".mainStart").css({opacity: 1, display: "block"});
+    oldData = [];
+    newData = [];
+
+    $("ul#playerList").empty();
 	 	socket.emit("start broadcast");
 	 });
 
@@ -744,6 +760,10 @@ $(document).ready(function() {
 	 	socket.emit("error");
 	 	$(".mainLogOn, .mainStart, .mainPlayground, .mainAbout, .mainClose, .popup").css({opacity: 0, display: "none"});
 	 	$(".mainStart").css({opacity: 1, display: "block"});
+    oldData = [];
+    newData = [];
+
+    $("ul#playerList").empty();
 	 	socket.emit("start broadcast");
 	 });
 });
