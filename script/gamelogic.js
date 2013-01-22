@@ -208,21 +208,21 @@ $(document).ready(function() {
 	startPlayground = function( myTurn ) {
 
 		$(".popup").animate({opacity: 0}, 500);
-  	$(".popup").css("display", "none");
+  		$(".popup").css("display", "none");
 
-  	turnEnabled = myTurn;
+	  	turnEnabled = myTurn;
 
-    show(".mainStart", ".mainPlayground", function() {
-  		$("p.info").html("Du bist angemeldet als <b>" + player_name + ".<br />Los geht's!</b>");
-    	$("span.player1").html( player_name );
-  	  $("span.player2").html( opponent_name );
+	    show(".mainStart", ".mainPlayground", function() {
+	  		$("p.info").html("Du bist angemeldet als <b>" + player_name + ".<br />Los geht's!</b>");
+	    	$("span.player1").html( player_name );
+			$("span.player2").html( opponent_name );
 
-  	  socket.removeAllListeners("turn");
-  	  socket.on("turn", function( data ) {
-  	  	setPoint( data.column );
-  	  	turnEnabled = true;
-  	  });
-	  });
+			socket.removeAllListeners("turn");
+			socket.on("turn", function( data ) {
+				setPoint( data.column );
+				turnEnabled = true;
+			});
+		});
 	}
 
 	closeFourInANode = function() {
@@ -282,7 +282,7 @@ $(document).ready(function() {
 		function Winner(counter) {
 			if(counter >= 4) {
 				enabled = false;
-	      playAgain( getPlayer );				
+	     	playAgain( getPlayer );			
 			}
 		}
 		
@@ -403,10 +403,12 @@ $(document).ready(function() {
 
 	initArrows = function() {
 		for(var i=1; i<8; i++) {
-			theCanvas = "canvas0_" + i + "_1";
-			theCanvasInactive = "canvas0" + "_" + i + "_0";
-			c = document.getElementById(theCanvas);
-			cInactive = document.getElementById(theCanvasInactive);
+			theCanvas = $("#canvas0_" + i + "_1");
+			theCanvasInactive = $("canvas0" + "_" + i + "_0");
+			theCanvas.css("opacity", 1); theCanvas.css("display", "block");
+			theCanvasInactive.css("opacity", 0); theCanvas.css("display", "none");
+			c = theCanvas[0]; //document.getElementById(theCanvas);
+			cInactive = theCanvasIncative[0]; //document.getElementById(theCanvasInactive);
 			c.width = c.width;
 			cInactive.width = cInactive.width;
 			context = c.getContext("2d");
@@ -452,13 +454,7 @@ $(document).ready(function() {
 		theCanvas.after('<canvas id="hoverCanvas" width="50" height="50"></canvas>');
 		var hoverCanvas = $("#hoverCanvas");
 		hoverCanvas.css({marginLeft: -50, opacity: 0.5, border:"none"});
-		if( turn%2 == 0 ) {
-        	//fillColor = "#616161" ; strokeColor = "#4b4b4b";
-        	fillColor = "#aa0000" ; strokeColor = "#880000";
-        } else {
-        	//fillColor = "#ffa200" ; strokeColor = "#ea6900";
-        	fillColor = "#0000aa" ; strokeColor = "#000088";
-        }
+    	fillColor = "#0000aa" ; strokeColor = "#000088";
 		drawCircle(hoverCanvas[0], fillColor, strokeColor, 25, 25, 20);
 
 	}
@@ -493,7 +489,7 @@ $(document).ready(function() {
 	function setPoint( colNumber ) {
 		if (animationActive == true)
 			return;
-		animationActive = true;
+		animationActive = true; 
         if( typeof(bounceInterval) == "undefined" )
         	bounceInterval = null;
 		clearInterval( bounceInterval );
@@ -644,18 +640,15 @@ $(document).ready(function() {
 		c = null;
 		context = null;
 		field_occupied = [];
-		freeField = true;
-		player_name = "";
-		opponent_name = "";
+		freeField = false;
+		/* player_name = "";
+		opponent_name = ""; */
 		enabled = true;
 		oldData = [];
 		turnEnabled = true;
 		turnOffset = 0;
 		animationActive = false;
 		bounceInterval = null;
-
-
-		$('.player1').css('font-weight','bold');
 		
 		initField();
 		initArrows();
