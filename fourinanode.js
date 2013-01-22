@@ -568,10 +568,7 @@ Ich schicke Zug 2:
       try {
         var msg = JSON.parse(msg);
         if (validateMessage(msg, GLOBAL.messages.end())) {
-          if (rinfo.address == OPPONENTS) {
-            clearInterval(timeoutInterval);
-            socket.emit("end of game");
-          }
+          OPPONENT.keepalive = GLOBAL.keepalive;
         }
       } catch (err) {
         console.log("err: "+err);
