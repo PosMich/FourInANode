@@ -448,7 +448,6 @@ Ich schicke Zug 2:
       clearInterval( timeoutInterval );
       clearInterval( turnTimeoutInterval );
     }
-    debg( function(){ console.log("-- emit version: "+VERSION) });
 
     clearTimeouts();
 
