@@ -3,12 +3,13 @@
 $(document).ready(function() {
 
 	socket = io.connect('http://localhost:8080');
-	content = [];
+	// content = [];
 	turn = 0;
 	theCanvas = null;
 	c = null;
 	context = null;
-	field_occupied = [];
+	// field_occupied = [];
+  field = [];
 	freeField = true;
 	player_name = "";
 	opponent_name = "";
@@ -19,6 +20,7 @@ $(document).ready(function() {
 	animationActive = false;
 	bounceInterval = null;
   blockSocket = true;
+  tiebreak = 0;
 
 	//Variables for Pictures
 	arrow = new Image();
@@ -160,26 +162,26 @@ $(document).ready(function() {
 
         $(".accept_game_request").one("click",function() {
 
-            initFourInANode();
+          initFourInANode();
 
-        clearInterval(bounceInterval);
-        bounceInterval = setInterval( function() {
-          $("#player2").effect("bounce", { times:3 }, 600);
-        }, 1500);
-        	socket.emit("incoming request accept");
-        	console.log("incoming request accept");
-        	socket.removeAllListeners("incoming request verified");
-        	socket.on("incoming request verified", function() {
-        	blockSocket = true;
-            socket.emit("ready for game");
-						console.log("start game");
-      			startPlayground( false );
-      			turnOffset = 1;
-        	}); 	
-      	});
-      });
+          clearInterval(bounceInterval);
+          bounceInterval = setInterval( function() {
+            $("#player2").effect("bounce", { times:3 }, 600);
+          }, 1500);
+          	socket.emit("incoming request accept");
+          	console.log("incoming request accept");
+          	socket.removeAllListeners("incoming request verified");
+          	socket.on("incoming request verified", function() {
+          	blockSocket = true;
+              socket.emit("ready for game");
+  						console.log("start game");
+        			startPlayground( false );
+        			turnOffset = 1;
+          	}); 	
+        	});
+        });
 
-      $(".toPlayground").each(function() {
+       $(".toPlayground").each(function() {
         $(this).off("click");
         $(this).one("click", function(e) {
           e.preventDefault();
@@ -212,10 +214,10 @@ $(document).ready(function() {
           $(".popup").animate({opacity:0}, 500);
           blockSocket = true;
           startPlayground( true );
-      clearInterval(bounceInterval);
-      bounceInterval = setInterval( function() {
-        $("#player1").effect("bounce", { times:3 }, 600);
-      }, 1500);
+          clearInterval(bounceInterval);
+            bounceInterval = setInterval( function() {
+            $("#player1").effect("bounce", { times:3 }, 600);
+          }, 1500);
         }
       });
     });
@@ -288,7 +290,8 @@ $(document).ready(function() {
 	//Functions to get the Winner
 	checkWinner = function(row, colNumber) {
 		var counter;
-		var getPlayer = content[row+"_"+colNumber];
+		var player = field[row][colNumber];
+    getPlayer = ( player == 1 ) ? player_name : opponent_name;
 		
 		checkVertical();
 		checkHorizontal(row);
@@ -305,7 +308,7 @@ $(document).ready(function() {
 		function checkVertical() {
 			counter = 0;
 			for(var i=1; i<7; i++) {
-				if(content[i + "_" + colNumber] == getPlayer){
+				if(f[i][colNumber] == player){
 					counter++;
 					if(counter >= 4) {
 						for(j = i; j > (i-4); j--)
@@ -323,7 +326,7 @@ $(document).ready(function() {
 		function checkHorizontal(row) {
 			counter = 0;
 			for(var i=1; i<8; i++) {
-				if(content[row+"_"+i] == getPlayer){
+				if(field[row][i] == player){
 					counter++;
 					if( counter >= 4) {
 						for(var j = i; j > (i-4); --j)
@@ -351,7 +354,7 @@ $(document).ready(function() {
 			
 			for(var i=0; i<6; i++) {
 				//console.log(r+"_"+col);
-				if(content[r+"_"+col] == getPlayer){
+				if(field[r][col] == player){
 					counter++;
 					if( counter >= 4) {
 						for( var j = 0; j < 4; ++j) {
@@ -384,7 +387,7 @@ $(document).ready(function() {
 
 			for(var i=0; i<6; i++) {
 				
-				if(content[r+"_"+col] == getPlayer){
+				if(field[r][col] == player){
 					counter++;
 					if( counter >= 4 ) {
 						for( var j = 0; j < 4; ++j ) {
@@ -407,10 +410,10 @@ $(document).ready(function() {
 
 	initField = function() {
 		for(var i=1; i<7; i++){
+      field[i] = []
 			for(var j=1; j<8; j++){
-				field_occupied[i + "_" + j] = false;
-				content[i + "_" + j]='';
-				$( "#canvas"+i+"_"+j )[0].width = $( "#canvas"+i+"_"+j )[0].width;
+				field[i][j]=0;
+				$("#canvas" + i + "_" + j )[0].width = $( "#canvas"+i+"_"+j )[0].width;
 				$("#canvas" + i + "_" + j).css("background-color", "#fefefe");
 				$("#canvas" + i + "_" + j).css("border-color", "#c8c8c8");
 			}
@@ -502,116 +505,68 @@ $(document).ready(function() {
 		}
 	});
 
+  function getFreeField( column ) {
+    for(var i = 6; i > 0; i--) {
+      if( field[i][column] == 0)
+        return i;
+    }
+    return 0;
+  }
+
 	function setPoint( colNumber ) {
+
 		if (animationActive == true)
 			return;
 		animationActive = true; 
 
-		if( enabled ) {
-			if( (turn+turnOffset)%2==0 ){
-				var i = 6;
-				while( freeField==false && i>0 ) {
-					if( (field_occupied[i + "_" + colNumber] )==false ){
+    fillColor = (turnEnabled) ? "#0000aa" : "#aa0000";
+    strokeColor = (turnEnabled) ? "#880000" : "#000088";
+    player = (turnEnabled) ? 1 : 2;
+    lastFreeField = getFreeField( colNumber );
 
-            //To see which field is already occupied with a stone
-            field_occupied[i + "_" + colNumber] = true;
-            content[i + "_" + colNumber] = player_name;
-            
-            turn++;
-            checkWinner(i, colNumber);
-            freeField = true;
+    if( lastFreeField != 0 && field[lastFreeField][colNumber] == 0 ) {
+      field[lastFreeField][colNumber] = player;
+      checkWinner(lastFreeField, colNumber);
 
-						var theCanvas = $("#canvas" + i + "_" + colNumber);	
-						// add new canvas
-						theCanvas.after('<canvas id="canvasTmpCopy' + i + '_' + colNumber + '" class="canvasTmpCopy" width="50" height="50"></canvas>');
-						var tmpCanvas = $("#canvasTmpCopy" + i + "_" + colNumber);
-						tmpCanvas.css({top: 180, marginLeft: -50, border:"none", background:"transparent", position:"absolute"});
-						drawCircle(tmpCanvas[0], '#aa0000', '#880000', 25, 25, 20);
-						
-						tmpCanvas.animate({top: theCanvas.position().top}, 1000, "easeOutBounce", function() {
-							drawCircle(theCanvas[0], '#aa0000', '#880000', 25, 25, 20);
-							tmpCanvas.remove();
-							animationActive = false;
-						});
-						
-						$('.player2').css('font-weight','bold');
-            $('.player1').css('font-weight','normal');
+      var theCanvas = $("#canvas" + lastFreeField + "_" + colNumber); 
+      // add new canvas
+      theCanvas.after('<canvas id="canvasTmpCopy' + lastFreeField + '_' 
+        + colNumber + '" class="canvasTmpCopy" width="50" height="50"></canvas>');
+      var tmpCanvas = $("#canvasTmpCopy" + lastFreeField + "_" + colNumber);
+      tmpCanvas.css({top: 180, marginLeft: -50, border:"none", background:"transparent", position:"absolute"});
+      drawCircle(tmpCanvas[0], fillColor, strokeColor, 25, 25, 20);
+      
+      tmpCanvas.animate({top: theCanvas.position().top}, 1000, "easeOutBounce", function() {
+        drawCircle(theCanvas[0], fillColor, strokeColor, 25, 25, 20);
+        tmpCanvas.remove();
+        animationActive = false;
+      });
 
-     				clearInterval( bounceInterval );
-					    bounceInterval = setInterval( function() {
-    					$("#player2").effect("bounce", { times:3 }, 600);
-    				}, 1500);
-						
-					}
-					i--;
-				}
-				if (i==0) {
-					// clear hover effects & unbind elements of that row
-					$("#canvas0_" + colNumber + "_1").css("opacity", 1);
-					$("#canvas0_" + colNumber + "_0").css("opacity", 0);
+      if ( player == 1 ) {
+        $(".player1").css("font-weight", "bold"); $(".player2").css("font-weight", "normal");
+      } else {
+        $(".player2").css("font-weight", "bold"); $(".player1").css("font-weight", "normal");
+      }
 
-					var myCanvas = "canvas0_" + colNumber + "_1"; 
-					c = document.getElementById(myCanvas);
-					context = c.getContext("2d");
-					context.drawImage(cross, 10, 10);
-					unBindControlls( colNumber );
-					unBindElements( colNumber, false );
-				}
-			} else if( (turn+turnOffset)%2 != 0 ) {
-				i=6;
-				while( freeField==false && i>0 ){
-					if( (field_occupied[i + "_" + colNumber] )==false ){
+      clearInterval( bounceInterval );
+        bounceInterval = setInterval( function() {
+        $("#player" + player).effect("bounce", { times:3 }, 600);
+      }, 1500);
+    }
 
-            content[i + "_" + colNumber] = opponent_name;
-            field_occupied[i + "_" + colNumber]=true;
-            
-            turn++;
-            checkWinner(i, colNumber);
-            freeField = true;
-
-						var theCanvas = $("#canvas" + i + "_" + colNumber);	
-						// add new canvas
-						theCanvas.after('<canvas id="canvasTmpCopy' + i + '_' + colNumber + '" class="canvasTmpCopy" width="50" height="50"></canvas>');
-						var tmpCanvas = $("#canvasTmpCopy" + i + '_' + colNumber)
-						tmpCanvas.css({top: 180, marginLeft: -50, border:"none", background:"transparent", position:"absolute"});
-						drawCircle(tmpCanvas[0], '#0000aa', '#000088', 25, 25, 20);
-						tmpCanvas.animate({top: theCanvas.position().top}, 1000, "easeOutBounce", function() {
-							drawCircle(theCanvas[0], '#0000aa', '#000088', 25, 25, 20);
-							tmpCanvas.remove();
-							animationActive = false;
-						});
-						
-						$('.player1').css('font-weight','bold');
-						$('.player2').css('font-weight','normal');
-
-     				clearInterval( bounceInterval );
-				   	bounceInterval = setInterval( function() {
-  	   				$("#player1").effect("bounce", { times:3 }, 600);
-    				}, 1500);
-					}
-					i--;
-				}
-				if (i==0) {
-					// clear hover effects & unbind elements of that row
-					$("#canvas0_" + colNumber + "_1").css("opacity", 1);
-					$("#canvas0_" + colNumber + "_0").css("opacity", 0);
-
-					var myCanvas = "canvas0_" + colNumber + "_1"; 
-					c = document.getElementById(myCanvas);
-					context = c.getContext("2d");
-					context.drawImage(cross, 10, 10);
-					unBindControlls( colNumber );
-					unBindElements( colNumber, false );
-				}
-			}
+    // unbind hovers and clicks and reset the background
+    $(".arrows_div canvas, .canvas_div canvas").unbind("click").unbind("hover");
+    for( var i = 1; i < 7; i++) {
+        $("#canvas" + i + "_" + colNumber).css("background-color", "#fefefe");
+        $("#canvas" + i + "_" + colNumber).css("border-color", "#c8c8c8");
+    }
 			
-	 		freeField=false;
-			
-			//Counter for filled Squares; if it is full (42), the game is over by draw
-			if( (turn-turnOffset)==42 ){
-				playAgain("");
-			}
+		//Counter for filled Squares; if it is full (42), the game is over by draw
+    tiebreak++;
+		if( tiebreak==42 ){
+			playAgain("");
 		}
+
 	}
 
 	$(".canvas_div").mousedown(function(e){e.preventDefault();});
@@ -647,12 +602,12 @@ $(document).ready(function() {
 
 	initFourInANode = function() {
 
-		content = [];
+		field = [];
 		turn = 0;
 		theCanvas = null;
 		c = null;
 		context = null;
-		field_occupied = [];
+		//field_occupied = [];
 		freeField = false;
 		/* player_name = "";
 		opponent_name = ""; */
@@ -662,6 +617,7 @@ $(document).ready(function() {
 		turnEnabled = true;
 		turnOffset = 0;
 		animationActive = false;
+    tiebreak = 0;
 		clearInterval(bounceInterval);
 		
 		initField();
