@@ -133,10 +133,6 @@ $(document).ready(function() {
 
       socket.removeAllListeners("incoming request");
       socket.on("incoming request", function( data ) {
-        clearInterval(bounceInterval);
-        bounceInterval = setInterval( function() {
-          $("#player2").effect("bounce", { times:3 }, 600);
-        }, 1500);
       	opponent_name = data.clientname;
       	$(".popup").html("<h2>\"" +  data.clientname + 
       		'\" würde gerne mit dir spielen.</h2><a href="#" class="button accept_game_request" id="logOnPlay">' + 
@@ -155,6 +151,10 @@ $(document).ready(function() {
 
             initFourInANode();
 
+        clearInterval(bounceInterval);
+        bounceInterval = setInterval( function() {
+          $("#player2").effect("bounce", { times:3 }, 600);
+        }, 1500);
         	socket.emit("incoming request accept");
         	console.log("incoming request accept");
         	socket.removeAllListeners("incoming request verified");
@@ -191,10 +191,6 @@ $(document).ready(function() {
     $(".popup").animate({opacity:1}, 1000);
     socket.removeAllListeners("request accepted");
     socket.on("request accepted", function( data ) {
-      clearInterval(bounceInterval);
-      bounceInterval = setInterval( function() {
-        $("#player1").effect("bounce", { times:3 }, 600);
-      }, 1500);
       socket.emit("ready for game");
       blockSocket = false;
       socket.removeAllListeners("start game");
@@ -205,6 +201,10 @@ $(document).ready(function() {
           $(".popup").animate({opacity:0}, 500);
           blockSocket = true;
           startPlayground( true );
+      clearInterval(bounceInterval);
+      bounceInterval = setInterval( function() {
+        $("#player1").effect("bounce", { times:3 }, 600);
+      }, 1500);
         }
       });
     });
@@ -506,7 +506,7 @@ $(document).ready(function() {
 						// add new canvas
 						theCanvas.after('<canvas id="canvasTmpCopy' + i + '_' + colNumber + '" class="canvasTmpCopy" width="50" height="50"></canvas>');
 						var tmpCanvas = $("#canvasTmpCopy" + i + "_" + colNumber);
-						tmpCanvas.css({top: 180, marginLeft: -50, border:"none", background:"transparent"});
+						tmpCanvas.css({top: 180, marginLeft: -50, border:"none", background:"transparent", position:"absolute"});
 						drawCircle(tmpCanvas[0], '#aa0000', '#880000', 25, 25, 20);
 						
 						tmpCanvas.animate({top: theCanvas.position().top}, 1000, "easeOutBounce", function() {
@@ -555,7 +555,7 @@ $(document).ready(function() {
 						// add new canvas
 						theCanvas.after('<canvas id="canvasTmpCopy' + i + '_' + colNumber + '" class="canvasTmpCopy" width="50" height="50"></canvas>');
 						var tmpCanvas = $("#canvasTmpCopy" + i + '_' + colNumber)
-						tmpCanvas.css({top: 180, marginLeft: -50, border:"none", background:"transparent"});
+						tmpCanvas.css({top: 180, marginLeft: -50, border:"none", background:"transparent", position:"absolute"});
 						drawCircle(tmpCanvas[0], '#0000aa', '#000088', 25, 25, 20);
 						tmpCanvas.animate({top: theCanvas.position().top}, 1000, "easeOutBounce", function() {
 							drawCircle(theCanvas[0], '#0000aa', '#000088', 25, 25, 20);
