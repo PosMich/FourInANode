@@ -18,7 +18,7 @@ $(document).ready(function() {
 	turnOffset = 0;
 	animationActive = false;
 	bounceInterval = null;
-  //blockSocket = true;
+    blockSocket = true;
 
 	//Variables for Pictures
 	arrow = new Image();
@@ -159,7 +159,7 @@ $(document).ready(function() {
         	console.log("incoming request accept");
         	socket.removeAllListeners("incoming request verified");
         	socket.on("incoming request verified", function() {
-        		//blockSocket = true;
+        	blockSocket = true;
             socket.emit("ready for game");
 						console.log("start game");
       			startPlayground( false );
@@ -196,16 +196,16 @@ $(document).ready(function() {
         $("#player1").effect("bounce", { times:3 }, 600);
       }, 1500);
       socket.emit("ready for game");
-      //blockSocket = false;
+      blockSocket = false;
       socket.removeAllListeners("start game");
       socket.on("start game", function() {
         //popup reseten
-        //if( blockSocket == false ) {
+        if( blockSocket == false ) {
           $(".popup").css("display", "none");
           $(".popup").animate({opacity:0}, 500);
-          //blockSocket = true;
+          blockSocket = true;
           startPlayground( true );
-        //}
+        }
       });
     });
   }
@@ -496,7 +496,6 @@ $(document).ready(function() {
 			return;
 		animationActive = true; 
 
-
 		if( enabled ) {
 			if( (turn+turnOffset)%2==0 ){
 				var i = 6;
@@ -505,8 +504,8 @@ $(document).ready(function() {
 
 						var theCanvas = $("#canvas" + i + "_" + colNumber);	
 						// add new canvas
-						theCanvas.after('<canvas id="canvasTmpCopy" width="50" height="50"></canvas>');
-						var tmpCanvas = $("#canvasTmpCopy");
+						theCanvas.after('<canvas id="canvasTmpCopy' + i + '_' + colNumber + '" width="50" height="50"></canvas>');
+						var tmpCanvas = $("#canvasTmpCopy" + i + '_' + colNumber);
 						tmpCanvas.css({top: 180, marginLeft: -50, border:"none", background:"transparent"});
 						drawCircle(tmpCanvas[0], '#aa0000', '#880000', 25, 25, 20);
 						
@@ -518,7 +517,7 @@ $(document).ready(function() {
 						
 						$('.player2').css('font-weight','bold');
 
-            clearInterval( bounceInterval );
+           				clearInterval( bounceInterval );
 						bounceInterval = setInterval( function() {
         					$("#player2").effect("bounce", { times:3 }, 600);
         				}, 1500);
