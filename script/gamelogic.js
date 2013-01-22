@@ -626,6 +626,8 @@ $(document).ready(function() {
     else
       text = opponent_name + " hat gewonnen!!";
 
+    socket.emit("end of game");
+
     setTimeout(function() {
       $(".popup").html('<h2>' + text + '</h2><p>Nochmal spielen?</p><p class="options"><a href="#" class="button replay_yes" id="logOnPlay"><span>Ja</span></a><a href="#" class="button replay_no" id="logOnPlay"><span>Nein</span></a></p>');
 
