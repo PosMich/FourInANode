@@ -1,87 +1,168 @@
-<!doctype html>
-<html lang="de">
+<!DOCTYPE html>
+<html>
 <head>
-    <meta charset="utf-8" />
-    <title>Four In A Node</title>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
-    <script src="http://localhost:8080/socket.io/socket.io.js"></script>
-    <!--[if IE]>
-        <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-    <script>
-        var socket = io.connect('http://localhost:8080');
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" href="css/mainstyle.css"/>
+<link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,200,300,300italic,700,600&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Croissant+One&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+<script src="script/jquery.js"></script>
+<script src="script/gamelogic.js"></script>
+<script src="script/jquery.ui.js"></script>
+<script src="http://localhost:8080/socket.io/socket.io.js"></script>
+<title>Home</title>
 
-        socket.on("update player name successful", function( data ) {
-            console.log("new name successfully set to: "+data);
-        });
-        socket.on("update Opponents", function(data) {
-          console.log("OPPONENTS: ");
-          $(".opponents").empty();
-          for (var i=0; i<data.length; i++) {
-            $(".opponents").append("<li>"+data[i].clientname+"@"+data[i].ip+" "+data[i].keepalive+"</li>");
-          }
-          console.log(data);
-        });
-
-        socket.on("incoming Request", function(data) {
-          console.log("incoming Request");
-          socket.emit("stop Broadcast");
-        })
-  </script>
-  <script type="css">
-  :invalid {
-    border: 2px solid #ff0000;
-  }
-  </script>
 </head>
+
 <body>
-  <p>
-    <input type="text" id="name" placeholder="Mein Name">
-    <button id="setName">Name setzen</button>
-  </p>
-  <p>
-    <input type="text" id="ip" placeholder="IP">
-    <button id="setIP">IP setzen</button>
-  </p>
-  <p>
-    <button id="broadcast">Broadcast starten</button>
-  </p>
-    <ul class="opponents"></ul>
-  <p>
-    <button id="startRequest">Anfrage starten</button>
-  </p>
-  <p>
-    <button id="acceptRequest">Anfrage akzeptieren</button>
-  </p>
-  <p><a href="#" id="start">Start searching</a></p>
-  <div id="found"></div>
-</body>
+<div id="wrapper">
+	<header>
+    	<h1> Four In A Row </h1>
+    </header>
+
+    <div class="popup"></div>
+
+    
+    <div class="main mainLogOn">
+        <p class="info"></p>
+        <p class="error"></p>
+        <div id="logOn">
+            <input type="text" id="logOnText" placeholder="Your Name Here!"></input>
+            <a href="#" class="button start" id="logOnPlay"><span>Play!</span></a>
+        </div>
+    </div>
+
+    <div class="main mainStart">
+        <p class="info"></p>        
+        
+        <ul id="playerList">
+        </ul><br/>
+
+
+    </div> <!-- Close mainStart -->
+
+    <div class="main mainPlayground">
+        <p class="info"></p>        
+        
+        <div id="playground">
+        
+            <div class="arrows_div">
+                <canvas id="canvas0_1_1" width="50" height="50" data-row="0" data-col="1" class="arrow"></canvas>
+                <canvas id="canvas0_1_0" width="50" height="50" data-row="0" data-col="1" class="arrow inactive"></canvas>
+                <canvas id="canvas0_2_1" width="50" height="50" data-row="0" data-col="2" class="arrow"></canvas>
+                <canvas id="canvas0_2_0" width="50" height="50" data-row="0" data-col="2" class="arrow inactive"></canvas>
+                <canvas id="canvas0_3_1" width="50" height="50" data-row="0" data-col="3" class="arrow"></canvas>
+                <canvas id="canvas0_3_0" width="50" height="50" data-row="0" data-col="3" class="arrow inactive"></canvas>
+                <canvas id="canvas0_4_1" width="50" height="50" data-row="0" data-col="4" class="arrow"></canvas>
+                <canvas id="canvas0_4_0" width="50" height="50" data-row="0" data-col="4" class="arrow inactive"></canvas>
+                <canvas id="canvas0_5_1" width="50" height="50" data-row="0" data-col="5" class="arrow"></canvas>
+                <canvas id="canvas0_5_0" width="50" height="50" data-row="0" data-col="5" class="arrow inactive"></canvas>
+                <canvas id="canvas0_6_1" width="50" height="50" data-row="0" data-col="6" class="arrow"></canvas>
+                <canvas id="canvas0_6_0" width="50" height="50" data-row="0" data-col="6" class="arrow inactive"></canvas>
+                <canvas id="canvas0_7_1" width="50" height="50" data-row="0" data-col="7" class="arrow"></canvas> 
+                <canvas id="canvas0_7_0" width="50" height="50" data-row="0" data-col="7" class="arrow inactive"></canvas><br/>
+            </div>
+            
+            <div class="canvas_div">
+                <canvas id="canvas1_1" width="50" height="50" data-row="1" data-col="1"></canvas>
+                <canvas id="canvas1_2" width="50" height="50" data-row="1" data-col="2"></canvas>
+                <canvas id="canvas1_3" width="50" height="50" data-row="1" data-col="3"></canvas>
+                <canvas id="canvas1_4" width="50" height="50" data-row="1" data-col="4"></canvas>
+                <canvas id="canvas1_5" width="50" height="50" data-row="1" data-col="5"></canvas>
+                <canvas id="canvas1_6" width="50" height="50" data-row="1" data-col="6"></canvas>
+                <canvas id="canvas1_7" width="50" height="50" data-row="1" data-col="7"></canvas> <br/>
+                
+                <canvas id="canvas2_1" width="50" height="50" data-row="2" data-col="1"></canvas>
+                <canvas id="canvas2_2" width="50" height="50" data-row="2" data-col="2"></canvas>
+                <canvas id="canvas2_3" width="50" height="50" data-row="2" data-col="3"></canvas>
+                <canvas id="canvas2_4" width="50" height="50" data-row="2" data-col="4"></canvas>
+                <canvas id="canvas2_5" width="50" height="50" data-row="2" data-col="5"></canvas>
+                <canvas id="canvas2_6" width="50" height="50" data-row="2" data-col="6"></canvas>
+                <canvas id="canvas2_7" width="50" height="50" data-row="2" data-col="7"></canvas> <br/>
+                
+                <canvas id="canvas3_1" width="50" height="50" data-row="3" data-col="1"></canvas>
+                <canvas id="canvas3_2" width="50" height="50" data-row="3" data-col="2"></canvas>
+                <canvas id="canvas3_3" width="50" height="50" data-row="3" data-col="3"></canvas>
+                <canvas id="canvas3_4" width="50" height="50" data-row="3" data-col="4"></canvas>
+                <canvas id="canvas3_5" width="50" height="50" data-row="3" data-col="5"></canvas>
+                <canvas id="canvas3_6" width="50" height="50" data-row="3" data-col="6"></canvas>
+                <canvas id="canvas3_7" width="50" height="50" data-row="3" data-col="7"></canvas> <br/>
+                
+                <canvas id="canvas4_1" width="50" height="50" data-row="4" data-col="1"></canvas>
+                <canvas id="canvas4_2" width="50" height="50" data-row="4" data-col="2"></canvas>
+                <canvas id="canvas4_3" width="50" height="50" data-row="4" data-col="3"></canvas>
+                <canvas id="canvas4_4" width="50" height="50" data-row="4" data-col="4"></canvas>
+                <canvas id="canvas4_5" width="50" height="50" data-row="4" data-col="5"></canvas>
+                <canvas id="canvas4_6" width="50" height="50" data-row="4" data-col="6"></canvas>
+                <canvas id="canvas4_7" width="50" height="50" data-row="4" data-col="7"></canvas> <br/>
+                
+                <canvas id="canvas5_1" width="50" height="50" data-row="5" data-col="1"></canvas>
+                <canvas id="canvas5_2" width="50" height="50" data-row="5" data-col="2"></canvas>
+                <canvas id="canvas5_3" width="50" height="50" data-row="5" data-col="3"></canvas>
+                <canvas id="canvas5_4" width="50" height="50" data-row="5" data-col="4"></canvas>
+                <canvas id="canvas5_5" width="50" height="50" data-row="5" data-col="5"></canvas>
+                <canvas id="canvas5_6" width="50" height="50" data-row="5" data-col="6"></canvas>
+                <canvas id="canvas5_7" width="50" height="50" data-row="5" data-col="7"></canvas> <br/>
+                
+                <canvas id="canvas6_1" width="50" height="50" data-row="6" data-col="1"></canvas>
+                <canvas id="canvas6_2" width="50" height="50" data-row="6" data-col="2"></canvas>
+                <canvas id="canvas6_3" width="50" height="50" data-row="6" data-col="3"></canvas>
+                <canvas id="canvas6_4" width="50" height="50" data-row="6" data-col="4"></canvas>
+                <canvas id="canvas6_5" width="50" height="50" data-row="6" data-col="5"></canvas>
+                <canvas id="canvas6_6" width="50" height="50" data-row="6" data-col="6"></canvas>
+                <canvas id="canvas6_7" width="50" height="50" data-row="6" data-col="7"></canvas> <br/>
+            </div>
+
+            <div id="players">
+                <canvas id="player1" width="30" height="30"></canvas>
+                <span class="player1"></span><br><br><br><br>
+                <canvas id="player2" width="30" height="30"></canvas>
+                <span class="player2"></span>
+                <br><br>
+                <canvas id="player2copy" width="50" height="50"></canvas>
+                <canvas id="player1copy" width="50" height="50"></canvas>
+            </div> 
+        </div>
+    </div>
+
+    <div class="main mainAbout">
+        <h2>Über das Projekt: </h2>
+        <p>
+            Dies ist ein Studentenprojekt der FH-Salzburg von Slamanig Sebastian, Poschacher Michael & Lederer Lisa. 
+            Dabei kann man übers Internet mit Freunden auf der ganzen Welt <b>4 Gewinnt</b> spielen.
+        </p>
+        
+        <h2>Anleitung: </h2>
+        <p>So spielt man:</p>
+        <span class="main">
+            <ul class="liste_wrapper">
+                <li class="liste">Zuerst muss man sich anmelden und einen Benutzernamen auswählen.</li>
+                <li class="liste">Dann wählt man aus einer Liste vorhandener Spieler seinen Gegner aus.</li>
+                <li class="liste">Es gewinnt derjenige, der zuerst vier Spielsteine seiner Farbe horizontal, vertikal oder diagonal in einer Reihe hat.</li>
+                <li class="liste">Zum Setzen eines Steines muss man mit der Maus entweder auf ein Quadrat oder eine Reihe klicken</li>
+                <li class="liste">Danach fällt der Spielstein in der Reihe auf den nächsten verfügbaren Spielslot.</li>
+                <li class="liste">Nach dem Setzen ist der andere Spieler an der Reihe.</li>
+            </ul>
+        </span>
+    
+
+    </div> <!-- Close main -->
+    <div class="main mainClose">
+      <p class="info"></p>
+    </div>
+
+
+	<footer>
+    	<p>FH-MMTB 2011 | Slamanig Sebastian | Poschacher Michael</p>
+    </footer>
+</div> <!-- Close wrapper -->
+
 <script>
-$(document).ready(function(){
-    $("#setName").click( function(e) {
-        e.preventDefault();
-        console.log("try 'set Name'");
-        socket.emit("set Name", $("#name").val());
-        console.log("emit 'set Name'");
-    });
 
-    $("#setIP").click( function(e) {
-        e.preventDefault();
-        socket.emit("set IP", $("#name").val());
-    });
+$(function() {
+    startGame();
+})
 
-    $("#broadcast").click( function(e) {
-        e.preventDefault();
-        socket.emit("find Opponents");
-    });
 
-    $("#startRequest").click( function(e) {
-        e.preventDefault();
-    });
-
-    $("#acceptRequest").click( function(e) {
-        e.preventDefault();
-    });
-});
 </script>
+</body>
 </html>
