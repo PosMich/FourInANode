@@ -504,8 +504,8 @@ $(document).ready(function() {
 
 						var theCanvas = $("#canvas" + i + "_" + colNumber);	
 						// add new canvas
-						theCanvas.after('<canvas id="canvasTmpCopy' + i + '_' + colNumber + '" width="50" height="50"></canvas>');
-						var tmpCanvas = $("#canvasTmpCopy" + i + '_' + colNumber);
+						theCanvas.after('<canvas id="canvasTmpCopy' + i + '_' + colNumber + '" class="canvasTmpCopy" width="50" height="50"></canvas>');
+						var tmpCanvas = $("#canvasTmpCopy" + i + "_" + colNumber);
 						tmpCanvas.css({top: 180, marginLeft: -50, border:"none", background:"transparent"});
 						drawCircle(tmpCanvas[0], '#aa0000', '#880000', 25, 25, 20);
 						
@@ -553,7 +553,7 @@ $(document).ready(function() {
 
 						var theCanvas = $("#canvas" + i + "_" + colNumber);	
 						// add new canvas
-						theCanvas.after('<canvas id="canvasTmpCopy' + i + '_' + colNumber + '" width="50" height="50"></canvas>');
+						theCanvas.after('<canvas id="canvasTmpCopy' + i + '_' + colNumber + '" class="canvasTmpCopy" width="50" height="50"></canvas>');
 						var tmpCanvas = $("#canvasTmpCopy" + i + '_' + colNumber)
 						tmpCanvas.css({top: 180, marginLeft: -50, border:"none", background:"transparent"});
 						drawCircle(tmpCanvas[0], '#0000aa', '#000088', 25, 25, 20);
