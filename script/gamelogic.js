@@ -459,7 +459,7 @@ $(document).ready(function() {
 		theCanvas.after('<canvas id="hoverCanvas" width="50" height="50"></canvas>');
 		var hoverCanvas = $("#hoverCanvas");
 		hoverCanvas.css({marginLeft: -50, opacity: 0.5, border:"none"});
-    	fillColor = "#0000aa" ; strokeColor = "#000088";
+    	fillColor = "#aa0000" ; strokeColor = "#880000";
 		drawCircle(hoverCanvas[0], fillColor, strokeColor, 25, 25, 20);
 
 	}
