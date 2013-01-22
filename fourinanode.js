@@ -59,8 +59,8 @@ GLOBAL.messages = {
 // bind whole thing to every incoming socket connection
 io.sockets.on('connection', function (socket) {
   console.log("SOCKET CONNECTED");
-  var dgram      = require("dgram");
-  var server     = dgram.createSocket("udp4");
+  dgram      = require("dgram");
+  server     = dgram.createSocket("udp4");
   server.bind(PORT);
 
   server.setTTL(255);
@@ -147,6 +147,7 @@ Stage 1 "Spieler finden"
         return;
 
       try {
+        console.log("BBBBBRRROOOADCAST");
         var msg = JSON.parse(msg);
         if (validateMessage( msg, GLOBAL.messages.search() ) == true && msg.stage == 1) {
 
@@ -173,6 +174,9 @@ Stage 1 "Spieler finden"
           incomingRequestHandler(msg, rinfo.address);
         } else if ( OPPONENT.ip != "0" && OPPONENT.ip == rinfo.address && msg.stage == 99 ) {
           clearInterval( error );
+        } else {
+          console.log("INCOMING MSG: ");
+          console.log(msg);
         }
         
       } catch(err) {
