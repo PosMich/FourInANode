@@ -553,8 +553,8 @@ $(document).ready(function() {
 
 						var theCanvas = $("#canvas" + i + "_" + colNumber);	
 						// add new canvas
-						theCanvas.after('<canvas id="canvasTmpCopy" width="50" height="50"></canvas>');
-						var tmpCanvas = $("#canvasTmpCopy");
+						theCanvas.after('<canvas id="canvasTmpCopy' + i + '_' + colNumber + '" width="50" height="50"></canvas>');
+						var tmpCanvas = $("#canvasTmpCopy" + i + '_' + colNumber)
 						tmpCanvas.css({top: 180, marginLeft: -50, border:"none", background:"transparent"});
 						drawCircle(tmpCanvas[0], '#0000aa', '#000088', 25, 25, 20);
 						tmpCanvas.animate({top: theCanvas.position().top}, 1000, "easeOutBounce", function() {
@@ -566,7 +566,7 @@ $(document).ready(function() {
 						$('.player1').css('font-weight','bold');
 						$('.player2').css('font-weight','normal');
 
-            clearInterval( bounceInterval );
+           				clearInterval( bounceInterval );
 						bounceInterval = setInterval( function() {
         					$("#player1").effect("bounce", { times:3 }, 600);
         				}, 1500);
