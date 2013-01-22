@@ -68,9 +68,6 @@ $(document).ready(function() {
       } else {
         showError( msg );
       }
-      bounceInterval = setInterval( function() {
-				$("#player1").effect("bounce", { times:3 }, 600);
-			}, 1500);
     }); 
 	}
 
@@ -136,6 +133,10 @@ $(document).ready(function() {
 
       socket.removeAllListeners("incoming request");
       socket.on("incoming request", function( data ) {
+        clearInterval(bounceInterval);
+        bounceInterval = setInterval( function() {
+          $("#player2").effect("bounce", { times:3 }, 600);
+        }, 1500);
       	opponent_name = data.clientname;
       	$(".popup").html("<h2>\"" +  data.clientname + 
       		'\" würde gerne mit dir spielen.</h2><a href="#" class="button accept_game_request" id="logOnPlay">' + 
@@ -190,6 +191,10 @@ $(document).ready(function() {
     $(".popup").animate({opacity:1}, 1000);
     socket.removeAllListeners("request accepted");
     socket.on("request accepted", function( data ) {
+      clearInterval(bounceInterval);
+      bounceInterval = setInterval( function() {
+        $("#player1").effect("bounce", { times:3 }, 600);
+      }, 1500);
       socket.emit("ready for game");
       //blockSocket = false;
       socket.removeAllListeners("start game");
@@ -216,7 +221,7 @@ $(document).ready(function() {
 	  		$("p.info").html("Du bist angemeldet als <b>" + player_name + ".<br />Los geht's!</b>");
 	    	$("span.player1").html( player_name );
 			$("span.player2").html( opponent_name );
-
+      
 			socket.removeAllListeners("turn");
 			socket.on("turn", function( data ) {
 				setPoint( data.column );
@@ -404,11 +409,11 @@ $(document).ready(function() {
 	initArrows = function() {
 		for(var i=1; i<8; i++) {
 			theCanvas = $("#canvas0_" + i + "_1");
-			theCanvasInactive = $("canvas0" + "_" + i + "_0");
-			theCanvas.css("opacity", 1); theCanvas.css("display", "block");
-			theCanvasInactive.css("opacity", 0); theCanvas.css("display", "none");
+			theCanvasInactive = $("#canvas0" + "_" + i + "_0");
+			theCanvas.css("opacity", 1); //theCanvas.css("display", "block");
+			theCanvasInactive.css("opacity", 0); //theCanvasInactive.css("display", "none");
 			c = theCanvas[0]; //document.getElementById(theCanvas);
-			cInactive = theCanvasIncative[0]; //document.getElementById(theCanvasInactive);
+			cInactive = theCanvasInactive[0]; //document.getElementById(theCanvasInactive);
 			c.width = c.width;
 			cInactive.width = cInactive.width;
 			context = c.getContext("2d");
@@ -490,9 +495,7 @@ $(document).ready(function() {
 		if (animationActive == true)
 			return;
 		animationActive = true; 
-        if( typeof(bounceInterval) == "undefined" )
-        	bounceInterval = null;
-		clearInterval( bounceInterval );
+
 
 		if( enabled ) {
 			if( (turn+turnOffset)%2==0 ){
@@ -515,6 +518,7 @@ $(document).ready(function() {
 						
 						$('.player2').css('font-weight','bold');
 
+            clearInterval( bounceInterval );
 						bounceInterval = setInterval( function() {
         					$("#player2").effect("bounce", { times:3 }, 600);
         				}, 1500);
@@ -563,8 +567,7 @@ $(document).ready(function() {
 						$('.player1').css('font-weight','bold');
 						$('.player2').css('font-weight','normal');
 
-						clearInterval( bounceInterval );
-
+            clearInterval( bounceInterval );
 						bounceInterval = setInterval( function() {
         					$("#player1").effect("bounce", { times:3 }, 600);
         				}, 1500);
@@ -648,7 +651,7 @@ $(document).ready(function() {
 		turnEnabled = true;
 		turnOffset = 0;
 		animationActive = false;
-		bounceInterval = null;
+		clearInterval(bounceInterval);
 		
 		initField();
 		initArrows();
